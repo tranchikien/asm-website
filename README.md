@@ -174,9 +174,9 @@ CREATE TABLE orders (
 3. Deploy tự động
 
 ## 👨‍💻 Tác giả
-- **Tên:** [Tên của bạn]
-- **MSSV:** [MSSV của bạn]
-- **Lớp:** [Lớp của bạn]
+- **Tên:** [Trần Chí Kiên]
+- **MSSV:** [BH01318]
+- **Lớp:** [SE07201]
 
 ## 📄 License
 MIT License
