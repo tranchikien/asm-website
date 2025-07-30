@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://kienstore-frontend.vercel.app', 'https://kienstore-frontend-git-main-kienstore-frontend.vercel.app'],
+    origin: true, // Allow all origins for testing
     credentials: true
 }));
 app.use(express.json());
@@ -24,6 +24,15 @@ mongoose.connect(MONGODB_URI, {
 })
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
+
+// Keep MongoDB connection alive
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('MongoDB disconnected');
+});
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -89,6 +98,15 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    });
+});
 
 // Authentication Routes
 app.post('/api/auth/register', async (req, res) => {
@@ -293,8 +311,25 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Frontend: http://localhost:${PORT}`);
     console.log(`API: http://localhost:${PORT}/api`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+    console.error('Server error:', error);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    server.close(() => {
+        console.log('Server closed');
+        mongoose.connection.close(() => {
+            console.log('MongoDB connection closed');
+            process.exit(0);
+        });
+    });
 }); 
