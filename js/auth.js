@@ -56,45 +56,45 @@ function validatePasswordStrength(password) {
 }
 
 /**
- * Register new user
+ * Register new user via API
  */
-function registerUser(userData) {
-    const users = getRegisteredUsers();
-    
-    // Check if email already exists
-    if (isEmailExists(userData.email)) {
-        return { success: false, message: 'Email đã được sử dụng!' };
+async function registerUser(userData) {
+    try {
+        const response = await apiCall(API_ENDPOINTS.REGISTER, {
+            method: 'POST',
+            body: JSON.stringify({
+                email: userData.email,
+                password: userData.password,
+                fullName: userData.fullname,
+                phone: userData.phone || '',
+                address: userData.address || '',
+                birthday: userData.birthday || '',
+                location: userData.location || ''
+            })
+        });
+        
+        return { success: true, message: 'Đăng ký thành công!', data: response };
+    } catch (error) {
+        return { success: false, message: error.message || 'Đăng ký thất bại!' };
     }
-    
-    // Add new user
-    const newUser = {
-        id: Date.now(), // Simple ID generation
-        email: userData.email,
-        password: userData.password, // In real app, should hash password
-        fullname: userData.fullname,
-        phone: userData.phone || '',
-        address: userData.address || '',
-        birthday: userData.birthday || '',
-        createdAt: new Date().toISOString()
-    };
-    
-    users.push(newUser);
-    saveRegisteredUsers(users);
-    
-    return { success: true, message: 'Đăng ký thành công!' };
 }
 
 /**
- * Authenticate user login
+ * Authenticate user login via API
  */
-function authenticateUser(email, password) {
-    const users = getRegisteredUsers();
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-        return { success: true, user: user };
-    } else {
-        return { success: false, message: 'Email hoặc mật khẩu không đúng!' };
+async function authenticateUser(email, password) {
+    try {
+        const response = await apiCall(API_ENDPOINTS.LOGIN, {
+            method: 'POST',
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        });
+        
+        return { success: true, user: response.user, token: response.token };
+    } catch (error) {
+        return { success: false, message: error.message || 'Email hoặc mật khẩu không đúng!' };
     }
 }
 
@@ -118,26 +118,16 @@ function handleLogin() {
     loginBtn.innerHTML = '<span class="loading"></span> Đang đăng nhập...';
     loginBtn.disabled = true;
     
-    setTimeout(() => {
-        // Authenticate user
-        const result = authenticateUser(email, password);
-        
+    // Authenticate user (async)
+    authenticateUser(email, password).then(result => {
         if (result.success) {
             // Login successful
             const user = result.user;
+            const token = result.token;
             
-            // Save current user session
+            // Save current user session and token
             localStorage.setItem('user', JSON.stringify(user));
-            
-            // Đồng bộ với registered_users
-            let users = getRegisteredUsers();
-            const idx = users.findIndex(u => u.email === user.email);
-            if (idx !== -1) {
-                users[idx] = { ...users[idx], ...user };
-            } else {
-                users.push(user);
-            }
-            localStorage.setItem('registered_users', JSON.stringify(users));
+            localStorage.setItem('authToken', token);
             
             showToast('Đăng nhập thành công!', 'success');
             
@@ -146,7 +136,7 @@ function handleLogin() {
             
             // Update profile page
             const profileUsername = document.getElementById('profile-username');
-            if (profileUsername) profileUsername.textContent = user.fullname;
+            if (profileUsername) profileUsername.textContent = user.fullName || user.fullname;
             
             // Close modal
             const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
@@ -159,7 +149,11 @@ function handleLogin() {
         // Reset button
         loginBtn.innerHTML = originalText;
         loginBtn.disabled = false;
-    }, 1000);
+    }).catch(error => {
+        showToast('Đăng nhập thất bại: ' + error.message, 'error');
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
+    });
 }
 
 function handleRegister() {
@@ -211,42 +205,33 @@ function handleRegister() {
     registerBtn.innerHTML = '<span class="loading"></span> Đang đăng ký...';
     registerBtn.disabled = true;
     
-    setTimeout(() => {
-        // Register new user
-        const result = registerUser({
-            email: email,
-            password: password,
-            fullname: username,
-            phone: phone,
-            birthday: birthday,
-            address: address
-        });
-        
+    // Register new user (async)
+    registerUser({
+        email: email,
+        password: password,
+        fullname: username,
+        phone: phone,
+        birthday: birthday,
+        address: address
+    }).then(result => {
         if (result.success) {
             // Registration successful
             showToast(result.message, 'success');
             
             // Auto login after registration
-            const loginResult = authenticateUser(email, password);
-            if (loginResult.success) {
-                const user = loginResult.user;
-                
-                // Save current user session
-                localStorage.setItem('user', JSON.stringify(user));
-                
-                // Đồng bộ với registered_users
-                let users = getRegisteredUsers();
-                const idx = users.findIndex(u => u.email === user.email);
-                if (idx !== -1) {
-                    users[idx] = { ...users[idx], ...user };
-                } else {
-                    users.push(user);
+            authenticateUser(email, password).then(loginResult => {
+                if (loginResult.success) {
+                    const user = loginResult.user;
+                    const token = loginResult.token;
+                    
+                    // Save current user session and token
+                    localStorage.setItem('user', JSON.stringify(user));
+                    localStorage.setItem('authToken', token);
+                    
+                    // Update UI immediately
+                    updateUserDropdown();
                 }
-                localStorage.setItem('registered_users', JSON.stringify(users));
-                
-                // Update UI immediately
-                updateUserDropdown();
-            }
+            });
             
             // Close modal
             const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
@@ -259,7 +244,11 @@ function handleRegister() {
         // Reset button
         registerBtn.innerHTML = originalText;
         registerBtn.disabled = false;
-    }, 1000);
+    }).catch(error => {
+        showToast('Đăng ký thất bại: ' + error.message, 'error');
+        registerBtn.innerHTML = originalText;
+        registerBtn.disabled = false;
+    });
 }
 
 // ===== FORM EVENT LISTENERS =====
