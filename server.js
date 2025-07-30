@@ -114,6 +114,22 @@ app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, fullname, phone, address, birthday, location } = req.body;
 
+        // Validation
+        if (!email || !password || !fullname) {
+            return res.status(400).json({ message: 'Email, password, and fullname are required' });
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        // Password validation
+        if (password.length < 8) {
+            return res.status(400).json({ message: 'Password must be at least 8 characters' });
+        }
+
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -128,10 +144,10 @@ app.post('/api/auth/register', async (req, res) => {
             email,
             password: hashedPassword,
             fullname,
-            phone,
-            address,
-            birthday,
-            location
+            phone: phone || '',
+            address: address || '',
+            birthday: birthday || null,
+            location: location || ''
         });
 
         await user.save();
@@ -163,8 +179,20 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
+    console.log('Login request received:', { email: req.body.email });
     try {
         const { email, password } = req.body;
+
+        // Validation
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
 
         // Find user
         const user = await User.findOne({ email });

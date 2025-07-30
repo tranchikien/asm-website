@@ -1,26 +1,16 @@
 // ===== AUTH FUNCTIONS =====
 
 /**
- * Get registered users from localStorage
+ * Check if email already exists via API
  */
-function getRegisteredUsers() {
-    const users = localStorage.getItem('registeredUsers');
-    return users ? JSON.parse(users) : [];
-}
-
-/**
- * Save registered users to localStorage
- */
-function saveRegisteredUsers(users) {
-    localStorage.setItem('registeredUsers', JSON.stringify(users));
-}
-
-/**
- * Check if email already exists
- */
-function isEmailExists(email) {
-    const users = getRegisteredUsers();
-    return users.find(user => user.email === email);
+async function isEmailExists(email) {
+    try {
+        // We'll check this during registration on the backend
+        return false; // Let backend handle validation
+    } catch (error) {
+        console.error('Email check error:', error);
+        return false;
+    }
 }
 
 /**
