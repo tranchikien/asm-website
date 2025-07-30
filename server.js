@@ -10,8 +10,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: true, // Allow all origins for testing
-    credentials: true
+    origin: ['https://kienstore-frontend.vercel.app', 'https://kienstore-frontend-git-main-kienstore-frontend.vercel.app', 'http://localhost:3000'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.static('.')); // Serve static files
@@ -98,6 +100,9 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -336,6 +341,17 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
 // Serve frontend
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({ message: 'Route not found' });
 });
 
 // Start server
