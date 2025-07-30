@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: ['https://kienstore-frontend.vercel.app', 'https://kienstore-frontend-git-main-kienstore-frontend.vercel.app', 'http://localhost:3000'],
-    credentials: true,
+    origin: '*', // Allow all origins temporarily
+    credentials: false, // Disable credentials for wildcard origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
