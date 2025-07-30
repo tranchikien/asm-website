@@ -10,8 +10,8 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: '*', // Allow all origins temporarily
-    credentials: false, // Disable credentials for wildcard origin
+    origin: ['https://asm-website-nine.vercel.app', 'http://localhost:3000'],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));

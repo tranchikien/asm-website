@@ -1,7 +1,7 @@
 // ===== API CONFIGURATION =====
 
 // API Base URL - Thay đổi URL này khi deploy
-const API_BASE_URL = 'https://kienstore-backend-production.up.railway.app';
+const API_BASE_URL = 'https://asm-website.railway.app';
 
 // API Endpoints
 const API_ENDPOINTS = {
