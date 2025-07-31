@@ -1,7 +1,7 @@
 // ===== API CONFIGURATION =====
 
 // API Base URL - Thay đổi URL này khi deploy
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://asm-website-production.up.railway.app';
 
 // API Endpoints
 const API_ENDPOINTS = {
@@ -32,6 +32,13 @@ function getApiUrl(endpoint) {
 async function apiCall(endpoint, options = {}) {
     const url = getApiUrl(endpoint);
     
+    console.log('🌐 API Call:', {
+        url: url,
+        method: options.method || 'GET',
+        endpoint: endpoint,
+        hasBody: !!options.body
+    });
+    
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
@@ -46,8 +53,12 @@ async function apiCall(endpoint, options = {}) {
     }
     
     try {
+        console.log('📤 Sending request to:', url);
         const response = await fetch(url, defaultOptions);
+        console.log('📥 Response status:', response.status);
+        
         const data = await response.json();
+        console.log('📥 Response data:', data);
         
         if (!response.ok) {
             throw new Error(data.message || 'API call failed');
@@ -55,7 +66,11 @@ async function apiCall(endpoint, options = {}) {
         
         return data;
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('❌ API Error:', error);
+        console.error('❌ Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
         throw error;
     }
 } 
