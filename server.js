@@ -381,7 +381,35 @@ app.put('/api/users/profile', authenticateToken, async (req, res) => {
 // Product Routes
 app.get('/api/products', async (req, res) => {
     try {
-        const products = await Product.find();
+        const { category, platform, search, sort } = req.query;
+        let query = {};
+        
+        // Filter by category
+        if (category) {
+            query.category = category;
+        }
+        
+        // Filter by platform
+        if (platform) {
+            query.platform = platform;
+        }
+        
+        // Search by name
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+        
+        let products = await Product.find(query);
+        
+        // Sort products
+        if (sort === 'price-asc') {
+            products = products.sort((a, b) => a.price - b.price);
+        } else if (sort === 'price-desc') {
+            products = products.sort((a, b) => b.price - a.price);
+        } else if (sort === 'name') {
+            products = products.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        
         res.json(products);
     } catch (error) {
         console.error('Get products error:', error);
@@ -402,16 +430,110 @@ app.get('/api/products/:id', async (req, res) => {
     }
 });
 
+// Admin: Create product
+app.post('/api/products', authenticateToken, async (req, res) => {
+    try {
+        const { name, description, price, originalPrice, category, platform, imageUrl, isSale, salePercentage } = req.body;
+        
+        const product = new Product({
+            name,
+            description,
+            price,
+            originalPrice: originalPrice || price,
+            category,
+            platform,
+            imageUrl,
+            isSale: isSale || false,
+            salePercentage: salePercentage || 0
+        });
+        
+        await product.save();
+        
+        res.status(201).json({
+            message: 'Product created successfully',
+            product
+        });
+    } catch (error) {
+        console.error('Create product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Update product
+app.put('/api/products/:id', authenticateToken, async (req, res) => {
+    try {
+        const { name, description, price, originalPrice, category, platform, imageUrl, isSale, salePercentage } = req.body;
+        
+        const product = await Product.findByIdAndUpdate(
+            req.params.id,
+            {
+                name,
+                description,
+                price,
+                originalPrice: originalPrice || price,
+                category,
+                platform,
+                imageUrl,
+                isSale: isSale || false,
+                salePercentage: salePercentage || 0
+            },
+            { new: true }
+        );
+        
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        res.json({
+            message: 'Product updated successfully',
+            product
+        });
+    } catch (error) {
+        console.error('Update product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Delete product
+app.delete('/api/products/:id', authenticateToken, async (req, res) => {
+    try {
+        const product = await Product.findByIdAndDelete(req.params.id);
+        
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        res.json({
+            message: 'Product deleted successfully',
+            product
+        });
+    } catch (error) {
+        console.error('Delete product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Order Routes
 app.post('/api/orders', authenticateToken, async (req, res) => {
     try {
         const { items, totalAmount, paymentMethod } = req.body;
         
+        // Validate items
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'Order must contain at least one item' });
+        }
+        
+        // Validate payment method
+        if (!paymentMethod) {
+            return res.status(400).json({ message: 'Payment method is required' });
+        }
+        
         const order = new Order({
             userId: req.user.userId,
             items,
             totalAmount,
-            paymentMethod
+            paymentMethod,
+            status: 'pending'
         });
 
         await order.save();
@@ -426,14 +548,120 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     }
 });
 
+// Get user orders
 app.get('/api/orders', authenticateToken, async (req, res) => {
     try {
-        const orders = await Order.find({ userId: req.user.userId })
+        const { status, sort } = req.query;
+        let query = { userId: req.user.userId };
+        
+        // Filter by status
+        if (status) {
+            query.status = status;
+        }
+        
+        let orders = await Order.find(query)
             .populate('items.productId')
             .sort({ createdAt: -1 });
+            
+        // Sort orders
+        if (sort === 'date-asc') {
+            orders = orders.sort((a, b) => a.createdAt - b.createdAt);
+        } else if (sort === 'amount-desc') {
+            orders = orders.sort((a, b) => b.totalAmount - a.totalAmount);
+        }
+        
         res.json(orders);
     } catch (error) {
         console.error('Get orders error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get specific order
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('items.productId')
+            .populate('userId', '-password');
+            
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        
+        // Check if user owns this order
+        if (order.userId.toString() !== req.user.userId) {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        
+        res.json(order);
+    } catch (error) {
+        console.error('Get order error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Get all orders
+app.get('/api/admin/orders', authenticateToken, async (req, res) => {
+    try {
+        const { status, userId, sort } = req.query;
+        let query = {};
+        
+        // Filter by status
+        if (status) {
+            query.status = status;
+        }
+        
+        // Filter by user
+        if (userId) {
+            query.userId = userId;
+        }
+        
+        let orders = await Order.find(query)
+            .populate('items.productId')
+            .populate('userId', '-password')
+            .sort({ createdAt: -1 });
+            
+        // Sort orders
+        if (sort === 'date-asc') {
+            orders = orders.sort((a, b) => a.createdAt - b.createdAt);
+        } else if (sort === 'amount-desc') {
+            orders = orders.sort((a, b) => b.totalAmount - a.totalAmount);
+        }
+        
+        res.json(orders);
+    } catch (error) {
+        console.error('Get all orders error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Update order status
+app.put('/api/admin/orders/:id/status', authenticateToken, async (req, res) => {
+    try {
+        const { status } = req.body;
+        
+        const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid status' });
+        }
+        
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        ).populate('items.productId')
+         .populate('userId', '-password');
+        
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+        
+        res.json({
+            message: 'Order status updated successfully',
+            order
+        });
+    } catch (error) {
+        console.error('Update order status error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
