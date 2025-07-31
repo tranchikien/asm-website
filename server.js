@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: ['https://asm-website-nine.vercel.app', 'https://asm-website.railway.app', 'http://localhost:3000'],
+    origin: ['https://asm-website-nine.vercel.app', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -19,21 +19,61 @@ app.use(express.json());
 app.use(express.static('.')); // Serve static files
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/kienstore';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI environment variable is not set!');
+    console.error('Please set MONGODB_URI in your Railway environment variables.');
+    process.exit(1);
+}
+
+console.log('🔗 Attempting to connect to MongoDB...');
+console.log('📋 Connection string format check:', MONGODB_URI.includes('mongodb+srv://') ? '✅ Atlas format' : '❌ Wrong format');
+
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => {
+    console.log('✅ Successfully connected to MongoDB Atlas');
+    console.log('📊 Database:', mongoose.connection.name);
+    console.log('🌐 Host:', mongoose.connection.host);
+})
+.catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    console.error('🔍 Error details:', {
+        name: err.name,
+        code: err.code,
+        message: err.message
+    });
+    
+    if (err.name === 'MongoServerSelectionError') {
+        console.error('💡 Possible solutions:');
+        console.error('   1. Check if MONGODB_URI is correct');
+        console.error('   2. Ensure IP whitelist includes 0.0.0.0/0');
+        console.error('   3. Verify username/password in connection string');
+    }
+    
+    process.exit(1);
+});
 
 // Keep MongoDB connection alive
 mongoose.connection.on('error', (err) => {
-    console.error('MongoDB connection error:', err);
+    console.error('❌ MongoDB connection error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
+    console.log('⚠️ MongoDB disconnected');
+});
+
+mongoose.connection.on('connected', () => {
+    console.log('✅ MongoDB connected');
+});
+
+mongoose.connection.on('reconnected', () => {
+    console.log('🔄 MongoDB reconnected');
 });
 
 // User Schema
@@ -109,7 +149,10 @@ app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'OK', 
         timestamp: new Date().toISOString(),
-        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+        cors: {
+            allowedOrigins: ['https://asm-website-nine.vercel.app', 'http://localhost:3000']
+        }
     });
 });
 
