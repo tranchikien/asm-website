@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.static('.')); // Serve static files
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/kienstore?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 if (!MONGODB_URI) {
     console.error('❌ MONGODB_URI environment variable is not set!');
@@ -33,6 +33,7 @@ if (!MONGODB_URI) {
 }
 
 console.log('🔗 Attempting to connect to MongoDB...');
+console.log('📋 MONGODB_URI:', MONGODB_URI);
 console.log('📋 Connection string format check:', MONGODB_URI.includes('mongodb+srv://') ? '✅ Atlas format' : '❌ Wrong format');
 
 mongoose.connect(MONGODB_URI, {
