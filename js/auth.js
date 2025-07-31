@@ -55,7 +55,7 @@ async function registerUser(userData) {
             body: JSON.stringify({
                 email: userData.email,
                 password: userData.password,
-                fullName: userData.fullname,
+                fullname: userData.fullname,
                 phone: userData.phone || '',
                 address: userData.address || '',
                 birthday: userData.birthday || '',
