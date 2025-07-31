@@ -33,6 +33,9 @@ if (!MONGODB_URI) {
 }
 
 console.log('🔗 Attempting to connect to MongoDB...');
+console.log('📋 Environment variables:');
+console.log('   - MONGODB_URI from env:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
+console.log('   - NODE_ENV:', process.env.NODE_ENV);
 console.log('📋 MONGODB_URI:', MONGODB_URI);
 console.log('📋 Connection string format check:', MONGODB_URI.includes('mongodb+srv://') ? '✅ Atlas format' : '❌ Wrong format');
 
