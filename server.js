@@ -240,8 +240,16 @@ app.post('/api/auth/register', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('❌ Registration error:', error);
+        console.error('🔍 Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        res.status(500).json({ 
+            message: 'Server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
     }
 });
 
@@ -302,8 +310,16 @@ app.post('/api/auth/login', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('❌ Login error:', error);
+        console.error('🔍 Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        res.status(500).json({ 
+            message: 'Server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
     }
 });
 
