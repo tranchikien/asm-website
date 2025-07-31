@@ -10,8 +10,13 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: '*', // Temporarily allow all origins for debugging
-    credentials: false,
+    origin: [
+        'https://asm-website-nine.vercel.app',
+        'https://asm-website-git-main-tranchikiens-projects.vercel.app',
+        'https://asm-website-gi84065aw-tranchikiens-projects.vercel.app',
+        'http://localhost:3000'
+    ],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -151,7 +156,12 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
         cors: {
-            allowedOrigins: ['https://asm-website-nine.vercel.app', 'http://localhost:3000']
+            allowedOrigins: [
+                'https://asm-website-nine.vercel.app',
+                'https://asm-website-git-main-tranchikiens-projects.vercel.app',
+                'https://asm-website-gi84065aw-tranchikiens-projects.vercel.app',
+                'http://localhost:3000'
+            ]
         }
     });
 });
