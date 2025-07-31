@@ -308,6 +308,16 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // User Routes
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password');
+        res.json(users);
+    } catch (error) {
+        console.error('Error getting users:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/users/profile', authenticateToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId).select('-password');

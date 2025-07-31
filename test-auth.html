@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        input { padding: 8px; margin: 5px; width: 300px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Authentication Test Tool</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Instructions</h3>
+        <p>1. Test registration with a new email</p>
+        <p>2. Test login with the registered email</p>
+        <p>3. Check if data is saved to MongoDB</p>
+    </div>
+
+    <div class="test-section">
+        <h3>📝 Register Test</h3>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="reg-email" placeholder="Enter email" value="test@example.com">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="reg-password" placeholder="Enter password" value="Test123!@#">
+        </div>
+        <div class="form-group">
+            <label>Full Name:</label>
+            <input type="text" id="reg-fullname" placeholder="Enter full name" value="Test User">
+        </div>
+        <div class="form-group">
+            <label>Phone:</label>
+            <input type="text" id="reg-phone" placeholder="Enter phone" value="0123456789">
+        </div>
+        <button onclick="testRegister()">Test Register</button>
+        <div id="register-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔐 Login Test</h3>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" id="login-email" placeholder="Enter email" value="test@example.com">
+        </div>
+        <div class="form-group">
+            <label>Password:</label>
+            <input type="password" id="login-password" placeholder="Enter password" value="Test123!@#">
+        </div>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔍 Check Users</h3>
+        <button onclick="checkUsers()">Check All Users</button>
+        <div id="users-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://asm-website-production.up.railway.app';
+        
+        async function testRegister() {
+            const resultDiv = document.getElementById('register-result');
+            resultDiv.innerHTML = '<p>Testing registration...</p>';
+            
+            const userData = {
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+                fullname: document.getElementById('reg-fullname').value,
+                phone: document.getElementById('reg-phone').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Registration Success</h4>
+                            <p>User created: ${userData.email}</p>
+                            <p>Token: ${data.token ? 'Generated' : 'None'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Registration Failed</h4>
+                            <p>Status: ${response.status}</p>
+                            <p>Error: ${data.message}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Registration Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<p>Testing login...</p>';
+            
+            const loginData = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Login Success</h4>
+                            <p>User: ${loginData.email}</p>
+                            <p>Token: ${data.token ? 'Generated' : 'None'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Login Failed</h4>
+                            <p>Status: ${response.status}</p>
+                            <p>Error: ${data.message}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Login Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function checkUsers() {
+            const resultDiv = document.getElementById('users-result');
+            resultDiv.innerHTML = '<p>Checking users...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Users Found</h4>
+                            <p>Total users: ${data.length}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Failed to get users</h4>
+                            <p>Status: ${response.status}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error getting users</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
