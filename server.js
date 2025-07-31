@@ -436,9 +436,9 @@ app.use('*', (req, res) => {
 
 // Start server
 const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Frontend: http://localhost:${PORT}`);
-    console.log(`API: http://localhost:${PORT}/api`);
+    console.log(`Server running on port 3000`);
+    console.log(`Frontend: http://localhost:3000`);
+    console.log(`API: http://localhost:3000/api`);
 });
 
 // Handle server errors
