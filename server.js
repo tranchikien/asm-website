@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.static('.')); // Serve static files
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 if (!MONGODB_URI) {
     console.error('❌ MONGODB_URI environment variable is not set!');
@@ -168,35 +168,42 @@ app.get('/api/health', (req, res) => {
 
 // Authentication Routes
 app.post('/api/auth/register', async (req, res) => {
-    console.log('Register request received:', req.body);
+    console.log('📝 Registration request received:', { email: req.body.email, fullname: req.body.fullname });
     try {
         const { email, password, fullname, phone, address, birthday, location } = req.body;
 
         // Validation
         if (!email || !password || !fullname) {
+            console.log('❌ Validation failed: missing required fields');
             return res.status(400).json({ message: 'Email, password, and fullname are required' });
         }
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
+            console.log('❌ Invalid email format:', email);
             return res.status(400).json({ message: 'Invalid email format' });
         }
 
         // Password validation
         if (password.length < 8) {
+            console.log('❌ Password too short');
             return res.status(400).json({ message: 'Password must be at least 8 characters' });
         }
 
+        console.log('🔍 Checking if user exists...');
         // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
+            console.log('❌ User already exists:', email);
             return res.status(400).json({ message: 'Email already exists' });
         }
 
+        console.log('🔐 Hashing password...');
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        console.log('👤 Creating new user...');
         // Create new user
         const user = new User({
             email,
@@ -208,7 +215,9 @@ app.post('/api/auth/register', async (req, res) => {
             location: location || ''
         });
 
+        console.log('💾 Saving user to database...');
         await user.save();
+        console.log('✅ User saved successfully! ID:', user._id);
 
         // Generate JWT token
         const token = jwt.sign(
@@ -237,32 +246,40 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    console.log('Login request received:', { email: req.body.email });
+    console.log('🔐 Login request received:', { email: req.body.email });
     try {
         const { email, password } = req.body;
 
         // Validation
         if (!email || !password) {
+            console.log('❌ Validation failed: missing email or password');
             return res.status(400).json({ message: 'Email and password are required' });
         }
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
+            console.log('❌ Invalid email format:', email);
             return res.status(400).json({ message: 'Invalid email format' });
         }
 
+        console.log('🔍 Finding user in database...');
         // Find user
         const user = await User.findOne({ email });
         if (!user) {
+            console.log('❌ User not found:', email);
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
+        console.log('✅ User found, checking password...');
         // Check password
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
+            console.log('❌ Invalid password for user:', email);
             return res.status(400).json({ message: 'Invalid email or password' });
         }
+
+        console.log('✅ Password valid, generating token...');
 
         // Generate JWT token
         const token = jwt.sign(
