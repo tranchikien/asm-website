@@ -2,15 +2,8 @@
 let cart = [];
 let cartRemovePendingId = null;
 
-async function addToCart(gameData) {
+function addToCart(gameData) {
     console.log('Adding to cart:', gameData); // Debug log
-    
-    // Check if user is logged in
-    const user = getCurrentUser();
-    if (!user) {
-        showToast('Vui lòng đăng nhập để thêm vào giỏ hàng', 'warning');
-        return;
-    }
     
     if (!gameData) {
         // Invalid game information
@@ -27,132 +20,85 @@ async function addToCart(gameData) {
         return;
     }
     
-    try {
-        const token = sessionStorage.getItem('authToken');
-        const response = await fetch(`${API_BASE_URL}/api/cart/add`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                productId: gameData.id,
-                quantity: 1
-            })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            cart = data.cart;
-            updateCartDisplay();
-            updateCartCount();
-        } else {
-            const error = await response.json();
-            showToast(error.message || 'Lỗi khi thêm vào giỏ hàng', 'error');
-        }
-    } catch (error) {
-        console.error('Add to cart error:', error);
-        showToast('Lỗi kết nối', 'error');
+    // Cho phép giá 0 (game miễn phí)
+    if (gameData.price === 0) {
+        gameData.price = 0; // Đảm bảo giá là 0
     }
+    const existingItemIndex = cart.findIndex(item => item.id === gameData.id);
+    if (existingItemIndex > -1) {
+        cart[existingItemIndex].quantity += 1;
+        // Quantity updated
+    } else {
+        // Tìm thông tin game từ gamesData để lấy thông tin sale
+        const game = typeof gamesData !== 'undefined' ? gamesData.find(g => g.id === gameData.id) : null;
+        const originalPrice = game && game.isSale && game.sale > 0 ? game.price : gameData.price;
+        const salePrice = game && game.isSale && game.sale > 0 ? game.price * (1 - game.sale / 100) : gameData.price;
+        
+        cart.push({
+            id: gameData.id,
+            name: gameData.name,
+            price: salePrice, // Giá sau khi giảm
+            originalPrice: originalPrice, // Giá gốc
+            sale: game ? game.sale : 0, // Phần trăm giảm giá
+            quantity: 1,
+            image: gameData.image || 'https://via.placeholder.com/60x60?text=Game'
+        });
+        // Added to cart
+    }
+    updateCartDisplay();
+    saveCartToStorage();
 }
 
-async function removeFromCart(gameId) {
-    const user = getCurrentUser();
-    if (!user) {
-        showToast('Vui lòng đăng nhập', 'warning');
-        return;
-    }
-    
-    try {
-        const token = sessionStorage.getItem('authToken');
-        const response = await fetch(`${API_BASE_URL}/api/cart/remove/${gameId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            cart = data.cart;
+function removeFromCart(gameId) {
+    const itemIndex = cart.findIndex(item => item.id === gameId);
+    if (itemIndex > -1) {
+        const gameName = cart[itemIndex].name;
+        // Hiệu ứng fade-out
+        const itemEl = document.getElementById('cart-item-' + gameId);
+        if (itemEl) {
+            itemEl.classList.remove('cart-fade-in');
+            itemEl.classList.add('cart-fade-out');
+            setTimeout(() => {
+                cart.splice(itemIndex, 1);
+                updateCartDisplay();
+                saveCartToStorage();
+                updateCartModal();
+                // Removed from cart
+            }, 350);
+        } else {
+            cart.splice(itemIndex, 1);
             updateCartDisplay();
+            saveCartToStorage();
             updateCartModal();
-        } else {
-            const error = await response.json();
-            showToast(error.message || 'Lỗi khi xóa khỏi giỏ hàng', 'error');
+            // Removed from cart
         }
-    } catch (error) {
-        console.error('Remove from cart error:', error);
-        showToast('Lỗi kết nối', 'error');
     }
 }
 
-async function updateCartItemQuantity(gameId, newQuantity) {
-    const user = getCurrentUser();
-    if (!user) {
-        showToast('Vui lòng đăng nhập', 'warning');
+function updateCartItemQuantity(gameId, newQuantity) {
+    if (newQuantity <= 0) {
+        removeFromCart(gameId);
         return;
     }
-    
-    try {
-        const token = sessionStorage.getItem('authToken');
-        const response = await fetch(`${API_BASE_URL}/api/cart/update`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                productId: gameId,
-                quantity: newQuantity
-            })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            cart = data.cart;
-            updateCartDisplay();
-            updateCartPage();
-            updateCartModal();
-        } else {
-            const error = await response.json();
-            showToast(error.message || 'Lỗi khi cập nhật giỏ hàng', 'error');
-        }
-    } catch (error) {
-        console.error('Update cart error:', error);
-        showToast('Lỗi kết nối', 'error');
+    const itemIndex = cart.findIndex(item => item.id === gameId);
+    if (itemIndex > -1) {
+        cart[itemIndex].quantity = newQuantity;
+        updateCartDisplay();
+        saveCartToStorage();
+        updateCartPage();
+        updateCartModal();
+        // Quantity updated
     }
 }
 
-async function loadCartFromAPI() {
-    const user = getCurrentUser();
-    if (!user) {
-        cart = [];
-        updateCartDisplay();
-        return;
-    }
-    
-    try {
-        const token = sessionStorage.getItem('authToken');
-        const response = await fetch(`${API_BASE_URL}/api/cart`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            cart = data;
-            updateCartDisplay();
-        } else {
-            cart = [];
-            updateCartDisplay();
-        }
-    } catch (error) {
-        console.error('Load cart error:', error);
-        cart = [];
-        updateCartDisplay();
-    }
+function saveCartToStorage() {
+    localStorage.setItem('wongstore_cart', JSON.stringify(cart));
+}
+
+function loadCartFromStorage() {
+    const data = localStorage.getItem('wongstore_cart');
+    cart = data ? JSON.parse(data) : [];
+    updateCartDisplay();
 }
 
 function updateCartDisplay() {
@@ -358,36 +304,14 @@ function updateCartPage() {
     totalEl.textContent = formatPrice(total);
 }
 
-async function clearCart() {
-    const user = getCurrentUser();
-    if (!user) {
-        showToast('Vui lòng đăng nhập', 'warning');
-        return;
-    }
-    
+function clearCart() {
     if (confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
-        try {
-            const token = sessionStorage.getItem('authToken');
-            const response = await fetch(`${API_BASE_URL}/api/cart/clear`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (response.ok) {
-                cart = [];
-                updateCartDisplay();
-                updateCartModal();
-                updateCartPage();
-            } else {
-                const error = await response.json();
-                showToast(error.message || 'Lỗi khi xóa giỏ hàng', 'error');
-            }
-        } catch (error) {
-            console.error('Clear cart error:', error);
-            showToast('Lỗi kết nối', 'error');
-        }
+        cart = [];
+        updateCartDisplay();
+        saveCartToStorage();
+        updateCartModal();
+        updateCartPage();
+        // Cart cleared
     }
 }
 
