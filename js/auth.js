@@ -445,9 +445,23 @@ function updateAdminMenu() {
 }
 
 /**
+ * Check if current user is admin
+ */
+function isAdmin() {
+    const user = getCurrentUser();
+    return user && user.isAdmin === true;
+}
+
+/**
  * Open admin panel modal
  */
 function openAdminPanel() {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     const modal = new bootstrap.Modal(document.getElementById('adminPanelModal'));
     modal.show();
     
@@ -466,6 +480,12 @@ function showAdminDashboard() {
  * Load admin dashboard data
  */
 async function loadAdminData() {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
@@ -478,9 +498,12 @@ async function loadAdminData() {
             const data = await response.json();
             updateAdminStats(data.stats);
             updateRecentOrders(data.recentOrders);
+        } else if (response.status === 403) {
+            showToast('Access denied. Admin privileges required.', 'error');
         }
     } catch (error) {
         console.error('Error loading admin data:', error);
+        showToast('Error loading admin data', 'error');
     }
 }
 
@@ -570,6 +593,12 @@ function switchAdminSection(sectionId) {
  * Load admin products
  */
 async function loadAdminProducts() {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/products`, {
@@ -581,9 +610,12 @@ async function loadAdminProducts() {
         if (response.ok) {
             const data = await response.json();
             displayAdminProducts(data.products);
+        } else if (response.status === 403) {
+            showToast('Access denied. Admin privileges required.', 'error');
         }
     } catch (error) {
         console.error('Error loading products:', error);
+        showToast('Error loading products', 'error');
     }
 }
 
@@ -619,6 +651,12 @@ function displayAdminProducts(products) {
  * Load admin orders
  */
 async function loadAdminOrders() {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/orders`, {
@@ -630,9 +668,12 @@ async function loadAdminOrders() {
         if (response.ok) {
             const data = await response.json();
             displayAdminOrders(data.orders);
+        } else if (response.status === 403) {
+            showToast('Access denied. Admin privileges required.', 'error');
         }
     } catch (error) {
         console.error('Error loading orders:', error);
+        showToast('Error loading orders', 'error');
     }
 }
 
@@ -674,6 +715,12 @@ function displayAdminOrders(orders) {
  * Load admin users
  */
 async function loadAdminUsers() {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
@@ -685,9 +732,12 @@ async function loadAdminUsers() {
         if (response.ok) {
             const users = await response.json();
             displayAdminUsers(users);
+        } else if (response.status === 403) {
+            showToast('Access denied. Admin privileges required.', 'error');
         }
     } catch (error) {
         console.error('Error loading users:', error);
+        showToast('Error loading users', 'error');
     }
 }
 
@@ -720,6 +770,12 @@ function displayAdminUsers(users) {
  * Show add product modal
  */
 function showAddProductModal() {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     document.getElementById('productModalTitle').textContent = 'Add Product';
     document.getElementById('addProductForm').reset();
     const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
@@ -734,6 +790,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (addProductForm) {
         addProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Check if user is admin
+            if (!isAdmin()) {
+                showToast('Access denied. Admin privileges required.', 'error');
+                return;
+            }
             
             const productData = {
                 name: document.getElementById('addProductName').value,
@@ -763,6 +825,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     modal.hide();
                     loadAdminProducts();
                     showToast('Product added successfully!', 'success');
+                } else if (response.status === 403) {
+                    showToast('Access denied. Admin privileges required.', 'error');
                 } else {
                     const data = await response.json();
                     showToast(data.message || 'Failed to add product', 'error');
@@ -779,6 +843,12 @@ document.addEventListener('DOMContentLoaded', function() {
  * Delete admin product
  */
 async function deleteAdminProduct(productId) {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     if (confirm('Are you sure you want to delete this product?')) {
         try {
             const token = localStorage.getItem('authToken');
@@ -792,6 +862,8 @@ async function deleteAdminProduct(productId) {
             if (response.ok) {
                 loadAdminProducts();
                 showToast('Product deleted successfully!', 'success');
+            } else if (response.status === 403) {
+                showToast('Access denied. Admin privileges required.', 'error');
             } else {
                 showToast('Failed to delete product', 'error');
             }
@@ -806,6 +878,12 @@ async function deleteAdminProduct(productId) {
  * Update admin order status
  */
 async function updateAdminOrderStatus(orderId, status) {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
@@ -819,6 +897,8 @@ async function updateAdminOrderStatus(orderId, status) {
 
         if (response.ok) {
             showToast('Order status updated successfully!', 'success');
+        } else if (response.status === 403) {
+            showToast('Access denied. Admin privileges required.', 'error');
         } else {
             showToast('Failed to update order status', 'error');
         }
@@ -832,6 +912,12 @@ async function updateAdminOrderStatus(orderId, status) {
  * Delete admin order
  */
 async function deleteAdminOrder(orderId) {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     if (confirm('Are you sure you want to delete this order?')) {
         try {
             const token = localStorage.getItem('authToken');
@@ -845,6 +931,8 @@ async function deleteAdminOrder(orderId) {
             if (response.ok) {
                 loadAdminOrders();
                 showToast('Order deleted successfully!', 'success');
+            } else if (response.status === 403) {
+                showToast('Access denied. Admin privileges required.', 'error');
             } else {
                 showToast('Failed to delete order', 'error');
             }
@@ -859,6 +947,12 @@ async function deleteAdminOrder(orderId) {
  * Delete admin user
  */
 async function deleteAdminUser(userId) {
+    // Check if user is admin
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
     if (confirm('Are you sure you want to delete this user?')) {
         try {
             const token = localStorage.getItem('authToken');
@@ -872,6 +966,8 @@ async function deleteAdminUser(userId) {
             if (response.ok) {
                 loadAdminUsers();
                 showToast('User deleted successfully!', 'success');
+            } else if (response.status === 403) {
+                showToast('Access denied. Admin privileges required.', 'error');
             } else {
                 showToast('Failed to delete user', 'error');
             }
