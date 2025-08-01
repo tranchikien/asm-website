@@ -249,19 +249,31 @@ app.post('/api/auth/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        const userResponse = {
+            id: user._id,
+            email: user.email,
+            fullname: user.fullname,
+            phone: user.phone,
+            address: user.address,
+            birthday: user.birthday,
+            location: user.location,
+            isAdmin: user.isAdmin
+        };
+        
+        console.log('🔐 Login Response User Object:', {
+            originalUser: {
+                _id: user._id,
+                email: user.email,
+                isAdmin: user.isAdmin,
+                isAdminType: typeof user.isAdmin
+            },
+            responseUser: userResponse
+        });
+        
         res.json({
             message: 'Login successful',
             token,
-            user: {
-                id: user._id,
-                email: user.email,
-                fullname: user.fullname,
-                phone: user.phone,
-                address: user.address,
-                birthday: user.birthday,
-                location: user.location,
-                isAdmin: user.isAdmin
-            }
+            user: userResponse
         });
     } catch (error) {
         console.error('❌ Login error:', error);
