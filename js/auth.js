@@ -445,30 +445,21 @@ function updateAdminMenu() {
 }
 
 /**
- * Show admin dashboard
+ * Open admin panel modal
  */
-function showAdminDashboard() {
-    // Hide main content
-    document.querySelector('main').style.display = 'none';
-    document.querySelector('.breadcrumb').style.display = 'none';
+function openAdminPanel() {
+    const modal = new bootstrap.Modal(document.getElementById('adminPanelModal'));
+    modal.show();
     
-    // Show admin dashboard
-    document.getElementById('admin-dashboard').style.display = 'block';
-    
-    // Load admin data
+    // Load admin data when modal opens
     loadAdminData();
 }
 
 /**
- * Hide admin dashboard
+ * Show admin dashboard (legacy function - now uses modal)
  */
-function hideAdminDashboard() {
-    // Show main content
-    document.querySelector('main').style.display = 'block';
-    document.querySelector('.breadcrumb').style.display = 'block';
-    
-    // Hide admin dashboard
-    document.getElementById('admin-dashboard').style.display = 'none';
+function showAdminDashboard() {
+    openAdminPanel();
 }
 
 /**
@@ -891,39 +882,28 @@ async function deleteAdminUser(userId) {
     }
 }
 
-// Add admin navigation event listeners
+// Add admin tab event listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // Admin nav links
-    document.querySelectorAll('.admin-nav-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
+    // Admin tab clicks
+    const adminTabs = document.querySelectorAll('#adminTabs .nav-link');
+    adminTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-bs-target').substring(1);
             
-            // Remove active class from all links
-            document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
-            link.classList.add('active');
-            
-            // Get section ID
-            const sectionId = link.getAttribute('data-section');
-            if (sectionId) {
-                switchAdminSection(sectionId);
-                
-                // Load section data
-                switch(sectionId) {
-                    case 'admin-overview':
-                        loadAdminData();
-                        break;
-                    case 'admin-products':
-                        loadAdminProducts();
-                        break;
-                    case 'admin-orders':
-                        loadAdminOrders();
-                        break;
-                    case 'admin-users':
-                        loadAdminUsers();
-                        break;
-                }
+            // Load data based on tab
+            switch(targetId) {
+                case 'dashboard':
+                    loadAdminData();
+                    break;
+                case 'products':
+                    loadAdminProducts();
+                    break;
+                case 'orders':
+                    loadAdminOrders();
+                    break;
+                case 'users':
+                    loadAdminUsers();
+                    break;
             }
         });
     });
