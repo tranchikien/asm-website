@@ -480,21 +480,41 @@ async function loadAdminData() {
     
     try {
         const token = localStorage.getItem('authToken');
+        
+        console.log('🔐 Loading admin data:', {
+            token: token ? 'Present' : 'Missing',
+            tokenLength: token ? token.length : 0,
+            apiUrl: `${API_BASE_URL}/api/admin/dashboard/stats`
+        });
+        
         const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
+        console.log('📥 Admin API Response:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok
+        });
+
         if (response.ok) {
             const data = await response.json();
+            console.log('📊 Admin data received:', data);
             updateAdminStats(data.stats);
             updateRecentOrders(data.recentOrders);
         } else if (response.status === 403) {
+            console.error('❌ Admin access denied - 403');
             showToast('Access denied. Admin privileges required.', 'error');
+        } else {
+            console.error('❌ Admin API error:', response.status, response.statusText);
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Error details:', errorData);
+            showToast('Error loading admin data', 'error');
         }
     } catch (error) {
-        console.error('Error loading admin data:', error);
+        console.error('❌ Error loading admin data:', error);
         showToast('Error loading admin data', 'error');
     }
 }
