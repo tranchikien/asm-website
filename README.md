@@ -148,13 +148,4 @@ CREATE TABLE orders (
 - **MSSV:** [BH01318]
 - **Lớp:** [SE07201]
 
-## 📄 License
-MIT License
-
-## 🤝 Contributing
-1. Fork project
-2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Tạo Pull Request 
 
