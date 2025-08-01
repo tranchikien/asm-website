@@ -115,9 +115,21 @@ function handleLogin() {
             const user = result.user;
             const token = result.token;
             
+            console.log('🔐 Login Response:', {
+                user: user,
+                hasIsAdmin: 'isAdmin' in user,
+                isAdminValue: user.isAdmin,
+                token: token ? 'Present' : 'Missing'
+            });
+            
             // Save current user session and token
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('authToken', token);
+            
+            console.log('💾 Saved to localStorage:', {
+                user: JSON.parse(localStorage.getItem('user')),
+                token: localStorage.getItem('authToken') ? 'Present' : 'Missing'
+            });
             
             showToast('Đăng nhập thành công!', 'success');
             
