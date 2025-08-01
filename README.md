@@ -188,30 +188,3 @@ MIT License
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Tạo Pull Request 
 
-## 🎯 **Bước tiếp theo: Lấy Connection String từ MongoDB Atlas**
-
-### **1. Trong MongoDB Atlas, click vào "Drivers"**
-
-### **2. Chọn cấu hình:**
-- **Driver:** Node.js
-- **Version:** 6.0 or later
-- **Connection method:** Standard connection string
-
-### **3. Copy connection string**
-
-Connection string sẽ có dạng:
-```
-mongodb+srv://tranchikienk39:2kvkA6ekBlHzdLiH@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-```
-
-## 🔧 **Cập nhật file .env:**
-
-Hãy mở file `.env` và thay thế dòng `MONGODB_URI` bằng connection string thực từ MongoDB Atlas:
-
-```
-<code_block_to_apply_changes_from>
-```
-
-**Lưu ý:** Thay `xxxxx` bằng phần thực từ connection string của bạn.
-
-## 🚀 **Khởi động lại server:** 
