@@ -122,9 +122,9 @@ function handleLogin() {
                 token: token ? 'Present' : 'Missing'
             });
             
-            // Save current user session and token (temporary during session only)
-            sessionStorage.setItem('user', JSON.stringify(user));
-            sessionStorage.setItem('authToken', token);
+            // Save current user session and token
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('authToken', token);
             
             console.log('💾 Saved to localStorage:', {
                 user: JSON.parse(localStorage.getItem('user')),
@@ -281,17 +281,17 @@ document.addEventListener('DOMContentLoaded', function() {
  * Logout function
  */
 function logout() {
-    // Clear user data and token from session storage
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('authToken');
+    // Clear user data and token
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
     
     // Update UI immediately
     updateUserDropdown();
     
-    // Clear cart from session storage
-    sessionStorage.removeItem('cart');
+    // Clear cart
     cart = [];
     updateCartDisplay();
+    saveCartToStorage();
     
     showToast('Đã đăng xuất thành công', 'success');
     
@@ -308,19 +308,19 @@ function logout() {
  * Check if user is logged in
  */
 function isLoggedIn() {
-    return sessionStorage.getItem('user') !== null;
+    return localStorage.getItem('user') !== null;
 }
 
 /**
- * Get current user from session storage (temporary during session only)
+ * Get current user
  */
 function getCurrentUser() {
-    const userData = sessionStorage.getItem('user');
-    const token = sessionStorage.getItem('authToken');
+    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('authToken');
     
     // If no token, clear user data
     if (!token) {
-        sessionStorage.removeItem('user');
+        localStorage.removeItem('user');
         return null;
     }
     
@@ -333,7 +333,7 @@ function getCurrentUser() {
  * Update user profile
  */
 function updateUserProfile(userData) {
-    sessionStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userData));
     showToast('Cập nhật thông tin thành công!', 'success');
 } 
 
@@ -386,12 +386,12 @@ function updateAdminUI() {
  */
 async function validateSession() {
     const user = getCurrentUser();
-    const token = sessionStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken');
     
     if (!user || !token) {
         // Clear any stale data
-        sessionStorage.removeItem('user');
-        sessionStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
         return false;
     }
     
@@ -406,22 +406,22 @@ async function validateSession() {
         if (response.ok) {
             const data = await response.json();
             // Update user data with fresh data from server
-            sessionStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('user', JSON.stringify(data.user));
             console.log('✅ Session validated successfully');
             return true;
         } else {
             // Token is invalid, clear session
             console.log('❌ Session validation failed, clearing data');
-            sessionStorage.removeItem('user');
-            sessionStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
             updateUserDropdown();
             return false;
         }
     } catch (error) {
         console.error('Session validation error:', error);
         // On network error, clear session to be safe
-        sessionStorage.removeItem('user');
-        sessionStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
         updateUserDropdown();
         return false;
     }
@@ -430,14 +430,14 @@ async function validateSession() {
 // ===== DEBUG FUNCTIONS =====
 
 /**
- * Debug function to check session storage
+ * Debug function to check localStorage
  */
 function debugLocalStorage() {
-    console.log('=== SESSION STORAGE DEBUG ===');
-    console.log('All sessionStorage:', sessionStorage);
+    console.log('=== LOCAL STORAGE DEBUG ===');
+    console.log('All localStorage:', localStorage);
     
     const user = getCurrentUser();
-    const token = sessionStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken');
     
     console.log('🔍 Session Debug:', {
         hasUser: !!user,
@@ -459,12 +459,12 @@ function debugLocalStorage() {
     }
     
     // Check other stored data
-    const cart = sessionStorage.getItem('cart');
+    const cart = localStorage.getItem('cart');
     if (cart) {
         console.log('🛒 Cart data:', JSON.parse(cart));
     }
     
-    const wishlist = sessionStorage.getItem('wishlist');
+    const wishlist = localStorage.getItem('wishlist');
     if (wishlist) {
         console.log('❤️ Wishlist data:', JSON.parse(wishlist));
     }
@@ -473,12 +473,12 @@ function debugLocalStorage() {
 }
 
 /**
- * Clear all session storage data
+ * Clear all localStorage data
  */
 function clearAllData() {
     if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu? (Đăng xuất, xóa giỏ hàng, wishlist...)')) {
-        sessionStorage.clear();
-        console.log('🗑️ All session storage data cleared');
+        localStorage.clear();
+        console.log('🗑️ All localStorage data cleared');
         location.reload(); // Reload trang để cập nhật UI
     }
 }
@@ -487,19 +487,19 @@ function clearAllData() {
  * Clean up inconsistent session data
  */
 function cleanupSessionData() {
-    const user = sessionStorage.getItem('user');
-    const token = sessionStorage.getItem('authToken');
+    const user = localStorage.getItem('user');
+    const token = localStorage.getItem('authToken');
     
     // If we have user data but no token, clear user data
     if (user && !token) {
         console.log('🧹 Cleaning up: User data without token');
-        sessionStorage.removeItem('user');
+        localStorage.removeItem('user');
     }
     
     // If we have token but no user data, clear token
     if (token && !user) {
         console.log('🧹 Cleaning up: Token without user data');
-        sessionStorage.removeItem('authToken');
+        localStorage.removeItem('authToken');
     }
     
     // If we have both, validate the data
@@ -508,13 +508,13 @@ function cleanupSessionData() {
             const userData = JSON.parse(user);
             if (!userData.email || !userData.fullname) {
                 console.log('🧹 Cleaning up: Invalid user data');
-                sessionStorage.removeItem('user');
-                sessionStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                localStorage.removeItem('authToken');
             }
         } catch (error) {
             console.log('🧹 Cleaning up: Corrupted user data');
-            sessionStorage.removeItem('user');
-            sessionStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
         }
     }
 }
@@ -567,9 +567,8 @@ window.testAdminPanel = function() {
  * Check if current user is admin
  */
 function isAdmin() {
-    // Get user from session storage instead of local storage
-    const user = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
-    const token = sessionStorage.getItem('authToken');
+    const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
     
     // Check if user exists and has valid token
     if (!user || !token) {
