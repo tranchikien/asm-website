@@ -711,7 +711,7 @@ function initializeAnimations() {
 /**
  * Initialize page
  */
-function initializePage() {
+async function initializePage() {
     // Show home page by default
     showHomePage();
     
@@ -724,8 +724,8 @@ function initializePage() {
     // Initialize animations
     initializeAnimations();
     
-    // Check login status
-    checkLoginStatus();
+    // Check login status and validate session
+    await checkLoginStatus();
     
     // Show toast notification
     // Welcome to KIENSTORE!
@@ -734,7 +734,23 @@ function initializePage() {
 /**
  * Check login status and update UI
  */
-function checkLoginStatus() {
+async function checkLoginStatus() {
+    // Clean up any inconsistent session data first
+    if (typeof cleanupSessionData === 'function') {
+        cleanupSessionData();
+    }
+    
+    // Validate session if user is logged in
+    const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
+    
+    if (user && token) {
+        // Try to validate session
+        if (typeof validateSession === 'function') {
+            await validateSession();
+        }
+    }
+    
     // Use the centralized updateUserDropdown function
     if (typeof updateUserDropdown === 'function') {
         updateUserDropdown();
