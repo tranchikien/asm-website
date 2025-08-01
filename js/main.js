@@ -715,8 +715,10 @@ async function initializePage() {
     // Show home page by default
     showHomePage();
     
-    // Load cart from storage
-    loadCartFromStorage();
+    // Load cart from API
+    if (typeof loadCartFromAPI === 'function') {
+        await loadCartFromAPI();
+    }
     
     // Initialize smooth scrolling
     initializeSmoothScrolling();
@@ -742,7 +744,7 @@ async function checkLoginStatus() {
     
     // Validate session if user is logged in
     const user = getCurrentUser();
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     
     if (user && token) {
         // Try to validate session
@@ -754,6 +756,11 @@ async function checkLoginStatus() {
     // Use the centralized updateUserDropdown function
     if (typeof updateUserDropdown === 'function') {
         updateUserDropdown();
+    }
+    
+    // Force update admin menu
+    if (typeof updateAdminMenu === 'function') {
+        updateAdminMenu();
     }
 }
 
@@ -1010,6 +1017,13 @@ if (document.readyState === 'loading') {
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializePage();
+    
+    // Force update admin menu after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        if (typeof updateAdminMenu === 'function') {
+            updateAdminMenu();
+        }
+    }, 1000);
 }); 
 
 // Hiển thị dropdown tài khoản khi đăng nhập
