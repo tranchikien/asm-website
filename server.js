@@ -11,12 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: [
-        'https://asm-website-nine.vercel.app',
-        'https://asm-website-git-main-tranchikiens-projects.vercel.app',
-        'https://asm-website-gi84065aw-tranchikiens-projects.vercel.app',
-        'http://localhost:3000'
-    ],
+    origin: true, // Allow all origins for testing
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']

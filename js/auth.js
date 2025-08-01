@@ -136,8 +136,11 @@ function handleLogin() {
             // Update UI immediately
             updateUserDropdown();
             
-            // Force update admin menu
-            updateAdminMenu();
+            // Force update admin menu with delay to ensure DOM is ready
+            setTimeout(() => {
+                console.log('🔄 Forcing admin menu update after login...');
+                updateAdminMenu();
+            }, 100);
             
             // Update profile page
             const profileUsername = document.getElementById('profile-username');
@@ -584,6 +587,8 @@ function isAdmin() {
         user: user.email,
         isAdmin: isAdminUser,
         hasToken: !!token,
+        userIsAdminField: user.isAdmin,
+        userIsAdminType: typeof user.isAdmin,
         userData: user
     });
     
@@ -596,12 +601,15 @@ function isAdmin() {
 function updateAdminMenu() {
     const adminMenu = document.getElementById('admin-menu');
     const isAdminUser = isAdmin();
+    const user = getCurrentUser();
     
     console.log('🔧 Update Admin Menu:', {
         adminMenu: adminMenu ? 'Found' : 'Not found',
         isAdmin: isAdminUser,
         display: isAdminUser ? 'block' : 'none',
-        user: getCurrentUser()
+        user: user ? user.email : 'None',
+        userIsAdmin: user ? user.isAdmin : 'N/A',
+        userIsAdminType: user ? typeof user.isAdmin : 'N/A'
     });
     
     if (adminMenu) {
