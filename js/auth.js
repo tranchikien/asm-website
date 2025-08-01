@@ -122,9 +122,9 @@ function handleLogin() {
                 token: token ? 'Present' : 'Missing'
             });
             
-            // Save current user session and token
-            localStorage.setItem('user', JSON.stringify(user));
-            localStorage.setItem('authToken', token);
+            // Save current user session and token (temporary during session only)
+            sessionStorage.setItem('user', JSON.stringify(user));
+            sessionStorage.setItem('authToken', token);
             
             console.log('💾 Saved to localStorage:', {
                 user: JSON.parse(localStorage.getItem('user')),
@@ -135,6 +135,9 @@ function handleLogin() {
             
             // Update UI immediately
             updateUserDropdown();
+            
+            // Force update admin menu
+            updateAdminMenu();
             
             // Update profile page
             const profileUsername = document.getElementById('profile-username');
@@ -278,17 +281,17 @@ document.addEventListener('DOMContentLoaded', function() {
  * Logout function
  */
 function logout() {
-    // Clear user data and token
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
+    // Clear user data and token from session storage
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('authToken');
     
     // Update UI immediately
     updateUserDropdown();
     
-    // Clear cart
+    // Clear cart from session storage
+    sessionStorage.removeItem('cart');
     cart = [];
     updateCartDisplay();
-    saveCartToStorage();
     
     showToast('Đã đăng xuất thành công', 'success');
     
@@ -305,19 +308,19 @@ function logout() {
  * Check if user is logged in
  */
 function isLoggedIn() {
-    return localStorage.getItem('user') !== null;
+    return sessionStorage.getItem('user') !== null;
 }
 
 /**
- * Get current user
+ * Get current user from session storage (temporary during session only)
  */
 function getCurrentUser() {
-    const userData = localStorage.getItem('user');
-    const token = localStorage.getItem('authToken');
+    const userData = sessionStorage.getItem('user');
+    const token = sessionStorage.getItem('authToken');
     
     // If no token, clear user data
     if (!token) {
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
         return null;
     }
     
@@ -330,7 +333,7 @@ function getCurrentUser() {
  * Update user profile
  */
 function updateUserProfile(userData) {
-    localStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('user', JSON.stringify(userData));
     showToast('Cập nhật thông tin thành công!', 'success');
 } 
 
@@ -383,12 +386,12 @@ function updateAdminUI() {
  */
 async function validateSession() {
     const user = getCurrentUser();
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     
     if (!user || !token) {
         // Clear any stale data
-        localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('authToken');
         return false;
     }
     
@@ -403,22 +406,22 @@ async function validateSession() {
         if (response.ok) {
             const data = await response.json();
             // Update user data with fresh data from server
-            localStorage.setItem('user', JSON.stringify(data.user));
+            sessionStorage.setItem('user', JSON.stringify(data.user));
             console.log('✅ Session validated successfully');
             return true;
         } else {
             // Token is invalid, clear session
             console.log('❌ Session validation failed, clearing data');
-            localStorage.removeItem('user');
-            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('authToken');
             updateUserDropdown();
             return false;
         }
     } catch (error) {
         console.error('Session validation error:', error);
         // On network error, clear session to be safe
-        localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('authToken');
         updateUserDropdown();
         return false;
     }
@@ -427,14 +430,14 @@ async function validateSession() {
 // ===== DEBUG FUNCTIONS =====
 
 /**
- * Debug function to check localStorage
+ * Debug function to check session storage
  */
 function debugLocalStorage() {
-    console.log('=== LOCAL STORAGE DEBUG ===');
-    console.log('All localStorage:', localStorage);
+    console.log('=== SESSION STORAGE DEBUG ===');
+    console.log('All sessionStorage:', sessionStorage);
     
     const user = getCurrentUser();
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     
     console.log('🔍 Session Debug:', {
         hasUser: !!user,
@@ -456,12 +459,12 @@ function debugLocalStorage() {
     }
     
     // Check other stored data
-    const cart = localStorage.getItem('cart');
+    const cart = sessionStorage.getItem('cart');
     if (cart) {
         console.log('🛒 Cart data:', JSON.parse(cart));
     }
     
-    const wishlist = localStorage.getItem('wishlist');
+    const wishlist = sessionStorage.getItem('wishlist');
     if (wishlist) {
         console.log('❤️ Wishlist data:', JSON.parse(wishlist));
     }
@@ -470,12 +473,12 @@ function debugLocalStorage() {
 }
 
 /**
- * Clear all localStorage data
+ * Clear all session storage data
  */
 function clearAllData() {
     if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu? (Đăng xuất, xóa giỏ hàng, wishlist...)')) {
-        localStorage.clear();
-        console.log('🗑️ All localStorage data cleared');
+        sessionStorage.clear();
+        console.log('🗑️ All session storage data cleared');
         location.reload(); // Reload trang để cập nhật UI
     }
 }
@@ -484,19 +487,19 @@ function clearAllData() {
  * Clean up inconsistent session data
  */
 function cleanupSessionData() {
-    const user = localStorage.getItem('user');
-    const token = localStorage.getItem('authToken');
+    const user = sessionStorage.getItem('user');
+    const token = sessionStorage.getItem('authToken');
     
     // If we have user data but no token, clear user data
     if (user && !token) {
         console.log('🧹 Cleaning up: User data without token');
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
     }
     
     // If we have token but no user data, clear token
     if (token && !user) {
         console.log('🧹 Cleaning up: Token without user data');
-        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
     }
     
     // If we have both, validate the data
@@ -505,13 +508,13 @@ function cleanupSessionData() {
             const userData = JSON.parse(user);
             if (!userData.email || !userData.fullname) {
                 console.log('🧹 Cleaning up: Invalid user data');
-                localStorage.removeItem('user');
-                localStorage.removeItem('authToken');
+                sessionStorage.removeItem('user');
+                sessionStorage.removeItem('authToken');
             }
         } catch (error) {
             console.log('🧹 Cleaning up: Corrupted user data');
-            localStorage.removeItem('user');
-            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('authToken');
         }
     }
 }
@@ -527,6 +530,36 @@ window.cleanupSessionData = cleanupSessionData;
 window.testCoupon = testCoupon;
 window.clearAllData = clearAllData;
 window.validateSession = validateSession;
+window.updateAdminMenu = updateAdminMenu;
+window.isAdmin = isAdmin;
+
+// Debug function to test admin panel
+window.testAdminPanel = function() {
+    console.log('🔍 Testing Admin Panel Access...');
+    
+    const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
+    const isAdminUser = isAdmin();
+    const adminMenu = document.getElementById('admin-menu');
+    
+    console.log('Current Status:', {
+        user: user ? user.email : 'None',
+        isAdmin: isAdminUser,
+        hasToken: !!token,
+        adminMenuFound: !!adminMenu,
+        adminMenuDisplay: adminMenu ? adminMenu.style.display : 'N/A'
+    });
+    
+    if (isAdminUser) {
+        console.log('✅ User is admin, should be able to access admin panel');
+        if (adminMenu) {
+            adminMenu.style.display = 'block';
+            console.log('✅ Admin menu should now be visible');
+        }
+    } else {
+        console.log('❌ User is not admin');
+    }
+};
 
 // ===== ADMIN DASHBOARD FUNCTIONS =====
 
@@ -534,8 +567,9 @@ window.validateSession = validateSession;
  * Check if current user is admin
  */
 function isAdmin() {
-    const user = getCurrentUser();
-    const token = localStorage.getItem('authToken');
+    // Get user from session storage instead of local storage
+    const user = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
+    const token = sessionStorage.getItem('authToken');
     
     // Check if user exists and has valid token
     if (!user || !token) {
@@ -567,15 +601,20 @@ function updateAdminMenu() {
     console.log('🔧 Update Admin Menu:', {
         adminMenu: adminMenu ? 'Found' : 'Not found',
         isAdmin: isAdminUser,
-        display: isAdminUser ? 'block' : 'none'
+        display: isAdminUser ? 'block' : 'none',
+        user: getCurrentUser()
     });
     
     if (adminMenu) {
         if (isAdminUser) {
             adminMenu.style.display = 'block';
+            console.log('✅ Admin menu should be visible');
         } else {
             adminMenu.style.display = 'none';
+            console.log('❌ Admin menu should be hidden');
         }
+    } else {
+        console.log('❌ Admin menu element not found');
     }
 }
 
@@ -583,14 +622,7 @@ function updateAdminMenu() {
  * Open admin panel modal
  */
 async function openAdminPanel() {
-    // Validate session first
-    const isValidSession = await validateSession();
-    if (!isValidSession) {
-        showToast('Session expired. Please login again.', 'error');
-        return;
-    }
-    
-    // Check if user is admin
+    // Check if user is admin first
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
@@ -614,14 +646,7 @@ function showAdminDashboard() {
  * Load admin dashboard data
  */
 async function loadAdminData() {
-    // Validate session first
-    const isValidSession = await validateSession();
-    if (!isValidSession) {
-        showToast('Session expired. Please login again.', 'error');
-        return;
-    }
-    
-    // Check if user is admin
+    // Check if user is admin first
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
