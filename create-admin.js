@@ -5,21 +5,8 @@ require('dotenv').config();
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/test?retryWrites=true&w=majority';
 
-// User Schema
-const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    fullname: String,
-    phone: String,
-    address: String,
-    birthday: Date,
-    location: String,
-    isAdmin: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
+// Import User Model
+const User = require('./models/User');
 
 async function createAdminUser() {
     try {
