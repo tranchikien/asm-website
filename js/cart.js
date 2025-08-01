@@ -6,17 +6,17 @@ function addToCart(gameData) {
     console.log('Adding to cart:', gameData); // Debug log
     
     if (!gameData) {
-        showToast('Thông tin game không hợp lệ', 'error');
+        // Invalid game information
         return;
     }
     
     if (!gameData.name || gameData.name.trim() === '') {
-        showToast('Tên game không hợp lệ', 'error');
+        // Invalid game name
         return;
     }
     
     if (gameData.price === undefined || gameData.price === null || gameData.price < 0) {
-        showToast('Giá game không hợp lệ', 'error');
+        // Invalid game price
         return;
     }
     
@@ -27,7 +27,7 @@ function addToCart(gameData) {
     const existingItemIndex = cart.findIndex(item => item.id === gameData.id);
     if (existingItemIndex > -1) {
         cart[existingItemIndex].quantity += 1;
-        showToast(`Đã cập nhật số lượng ${gameData.name}`, 'success');
+        // Quantity updated
     } else {
         // Tìm thông tin game từ gamesData để lấy thông tin sale
         const game = typeof gamesData !== 'undefined' ? gamesData.find(g => g.id === gameData.id) : null;
@@ -43,7 +43,7 @@ function addToCart(gameData) {
             quantity: 1,
             image: gameData.image || 'https://via.placeholder.com/60x60?text=Game'
         });
-        showToast(`Đã thêm ${gameData.name} vào giỏ hàng`, 'success');
+        // Added to cart
     }
     updateCartDisplay();
     saveCartToStorage();
@@ -63,14 +63,14 @@ function removeFromCart(gameId) {
                 updateCartDisplay();
                 saveCartToStorage();
                 updateCartModal();
-                showToast(`Đã xóa ${gameName} khỏi giỏ hàng`, 'success');
+                // Removed from cart
             }, 350);
         } else {
             cart.splice(itemIndex, 1);
             updateCartDisplay();
             saveCartToStorage();
             updateCartModal();
-            showToast(`Đã xóa ${gameName} khỏi giỏ hàng`, 'success');
+            // Removed from cart
         }
     }
 }
@@ -87,7 +87,7 @@ function updateCartItemQuantity(gameId, newQuantity) {
         saveCartToStorage();
         updateCartPage();
         updateCartModal();
-        showToast('Đã cập nhật số lượng', 'success');
+        // Quantity updated
     }
 }
 
@@ -310,19 +310,19 @@ function clearCart() {
     saveCartToStorage();
     updateCartModal();
     updateCartPage();
-    showToast('Đã xóa toàn bộ giỏ hàng', 'success');
+            // Cart cleared
 }
 
 function handleCheckout() {
     if (cart.length === 0) {
-        showToast('Giỏ hàng trống', 'error');
+        // Cart is empty
         return;
     }
     
     // Check if user is logged in
     const user = getCurrentUser();
     if (!user) {
-        showToast('Vui lòng đăng nhập để thanh toán', 'warning');
+        // Please login to checkout
         // Optionally redirect to login
         setTimeout(() => {
             const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
@@ -331,7 +331,7 @@ function handleCheckout() {
         return;
     }
     
-    showToast('Đang chuyển đến trang thanh toán...', 'info');
+            // Redirecting to checkout
     openCheckoutModal();
 } 
 

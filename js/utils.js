@@ -2114,7 +2114,7 @@ window.testUserData = function() {
 if (document.getElementById('demoCheckoutForm')) {
     document.getElementById('demoCheckoutForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        showToast('Demo payment successful! (No actual transaction)', 'success');
+        // Demo payment successful
         const modal = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
         if (modal) modal.hide();
     });

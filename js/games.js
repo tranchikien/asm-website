@@ -344,12 +344,12 @@ function handleProductForm(e) {
     if (id) {
         // Sửa
         products = products.map(p => p.id == id ? { ...p, name, price, category, platform, image, description } : p);
-        showToast('Đã cập nhật sản phẩm!', 'success');
+                    // Product updated successfully
     } else {
         // Thêm mới
         const newId = products.length ? Math.max(...products.map(p => +p.id)) + 1 : 1;
         products.push({ id: newId, name, price, category, platform, image, description });
-        showToast('Đã thêm sản phẩm mới!', 'success');
+                    // Product added successfully
     }
     saveAdminProducts(products);
     renderProductAdminList();
@@ -378,7 +378,7 @@ function handleProductDelete() {
     saveAdminProducts(products);
     renderProductAdminList();
     bootstrap.Modal.getInstance(document.getElementById('productDeleteModal')).hide();
-    showToast('Đã xóa sản phẩm!', 'success');
+            // Product deleted successfully
     productDeletePendingId = null;
 }
 

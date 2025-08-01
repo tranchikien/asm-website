@@ -728,7 +728,7 @@ function initializePage() {
     checkLoginStatus();
     
     // Show toast notification
-    showToast('Chào mừng đến với KIENSTORE!', 'success');
+    // Welcome to KIENSTORE!
 }
 
 /**
@@ -752,7 +752,7 @@ function showProfilePage() {
         if (registerModal) registerModal.hide();
     } catch {}
     openModal('profileModal');
-    showToast('Đã mở trang thông tin cá nhân', 'info');
+            // Profile page opened
 }
 
 /**
