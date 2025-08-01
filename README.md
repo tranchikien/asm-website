@@ -60,36 +60,6 @@ asm-website/
 └── .gitignore
 ```
 
-## 🚀 Cách chạy
-
-### Local Development
-1. Clone repository:
-```bash
-git clone <repository-url>
-cd asm-website
-```
-
-2. Mở file `index.html` trong trình duyệt hoặc sử dụng live server:
-```bash
-# Nếu có Python
-python -m http.server 8000
-
-# Nếu có Node.js
-npx live-server
-```
-
-3. Truy cập: `http://localhost:8000`
-
-## 🔧 Cài đặt
-
-### Yêu cầu hệ thống
-- Trình duyệt web hiện đại (Chrome, Firefox, Safari, Edge)
-- Git (để clone repository)
-
-### Dependencies
-- Bootstrap 5 (CDN)
-- Font Awesome (CDN)
-- jQuery (CDN)
 
 ## 📊 Database Schema (Planned)
 
