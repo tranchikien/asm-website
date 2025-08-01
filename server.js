@@ -282,6 +282,33 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Token validation endpoint
+app.get('/api/auth/validate', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        res.json({
+            message: 'Token is valid',
+            user: {
+                id: user._id,
+                email: user.email,
+                fullname: user.fullname,
+                phone: user.phone,
+                address: user.address,
+                birthday: user.birthday,
+                location: user.location,
+                isAdmin: user.isAdmin
+            }
+        });
+    } catch (error) {
+        console.error('Token validation error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // User Routes
 app.get('/api/users', async (req, res) => {
     try {
