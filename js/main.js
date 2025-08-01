@@ -715,10 +715,8 @@ async function initializePage() {
     // Show home page by default
     showHomePage();
     
-    // Load cart from API
-    if (typeof loadCartFromAPI === 'function') {
-        await loadCartFromAPI();
-    }
+    // Load cart from storage
+    loadCartFromStorage();
     
     // Initialize smooth scrolling
     initializeSmoothScrolling();
@@ -744,7 +742,7 @@ async function checkLoginStatus() {
     
     // Validate session if user is logged in
     const user = getCurrentUser();
-    const token = sessionStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken');
     
     if (user && token) {
         // Try to validate session
