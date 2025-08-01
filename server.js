@@ -3,6 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const adminRoutes = require('./admin');
 require('dotenv').config();
 
 const app = express();
@@ -94,6 +95,7 @@ const userSchema = new mongoose.Schema({
     address: String,
     birthday: Date,
     location: String,
+    isAdmin: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -666,9 +668,17 @@ app.put('/api/admin/orders/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
+// Admin routes
+app.use('/api/admin', adminRoutes);
+
 // Serve frontend
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
+});
+
+// Serve admin dashboard
+app.get('/admin', (req, res) => {
+    res.sendFile(__dirname + '/admin.html');
 });
 
 // Error handling middleware
