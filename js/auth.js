@@ -343,25 +343,8 @@ function updateUserDropdown() {
 }
 
 function updateAdminUI() {
-    let adminBtn = document.getElementById('admin-btn');
-    if (!adminBtn) {
-        // Thêm nút vào navbar nếu chưa có
-        const nav = document.querySelector('.navbar .d-flex.align-items-center');
-        if (nav) {
-            adminBtn = document.createElement('button');
-            adminBtn.id = 'admin-btn';
-            adminBtn.className = 'btn btn-outline-warning btn-sm me-2 hover-lift';
-            adminBtn.innerHTML = '<i class="fas fa-cogs me-1"></i>Quản trị';
-            adminBtn.style.display = 'none';
-            adminBtn.onclick = function() { showAdminDashboard(); };
-            nav.appendChild(adminBtn);
-        }
-    }
-    if (isAdmin()) {
-        adminBtn.style.display = 'inline-block';
-    } else if (adminBtn) {
-        adminBtn.style.display = 'none';
-    }
+    // Update admin menu instead
+    updateAdminMenu();
 } 
 
 // ===== DEBUG FUNCTIONS =====
@@ -427,7 +410,16 @@ window.clearAllData = clearAllData;
  */
 function isAdmin() {
     const user = getCurrentUser();
-    return user && user.isAdmin === true;
+    const isAdminUser = user && user.isAdmin === true;
+    
+    // Debug log
+    console.log('🔍 Admin Check:', {
+        user: user ? user.email : 'No user',
+        isAdmin: isAdminUser,
+        userData: user
+    });
+    
+    return isAdminUser;
 }
 
 /**
@@ -435,21 +427,21 @@ function isAdmin() {
  */
 function updateAdminMenu() {
     const adminMenu = document.getElementById('admin-menu');
+    const isAdminUser = isAdmin();
+    
+    console.log('🔧 Update Admin Menu:', {
+        adminMenu: adminMenu ? 'Found' : 'Not found',
+        isAdmin: isAdminUser,
+        display: isAdminUser ? 'block' : 'none'
+    });
+    
     if (adminMenu) {
-        if (isAdmin()) {
+        if (isAdminUser) {
             adminMenu.style.display = 'block';
         } else {
             adminMenu.style.display = 'none';
         }
     }
-}
-
-/**
- * Check if current user is admin
- */
-function isAdmin() {
-    const user = getCurrentUser();
-    return user && user.isAdmin === true;
 }
 
 /**
