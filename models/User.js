@@ -9,6 +9,28 @@ const userSchema = new mongoose.Schema({
     birthday: Date,
     location: String,
     isAdmin: { type: Boolean, default: false },
+    cart: [{
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product'
+        },
+        name: String,
+        price: Number,
+        image: String,
+        quantity: {
+            type: Number,
+            default: 1
+        }
+    }],
+    wishlist: [{
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product'
+        },
+        name: String,
+        price: Number,
+        image: String
+    }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
