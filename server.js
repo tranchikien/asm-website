@@ -265,9 +265,11 @@ app.post('/api/auth/login', async (req, res) => {
                 _id: user._id,
                 email: user.email,
                 isAdmin: user.isAdmin,
-                isAdminType: typeof user.isAdmin
+                isAdminType: typeof user.isAdmin,
+                fullObject: user.toObject()
             },
-            responseUser: userResponse
+            responseUser: userResponse,
+            finalResponse: JSON.stringify(userResponse)
         });
         
         res.json({
