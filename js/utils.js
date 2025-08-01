@@ -29,7 +29,6 @@ function openCheckoutModal() {
     const user = getCurrentUser();
     if (user) {
         fillFromProfile();
-        showToast('Thông tin đã được tự động điền từ profile!', 'success');
     } else {
         showToast('Vui lòng nhập thông tin thanh toán', 'info');
     }
@@ -1060,7 +1059,6 @@ function showWishlist() {
     renderWishlist();
     updateBreadcrumbForPage('Wishlist');
     scrollToTop();
-    showToast('Đã mở trang wishlist', 'info');
 }
 
 /**
@@ -1133,7 +1131,6 @@ function showOrderHistory() {
     renderOrderHistory();
     updateBreadcrumbForPage('Order History');
     scrollToTop();
-    showToast('Đã mở trang lịch sử đơn hàng', 'info');
 }
 
 /**
