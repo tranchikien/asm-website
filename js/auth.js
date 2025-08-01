@@ -309,10 +309,6 @@ function updateUserProfile(userData) {
     showToast('Cập nhật thông tin thành công!', 'success');
 } 
 
-function isAdmin() {
-    const user = getCurrentUser();
-    return user && user.email === 'admin@kienstore.com';
-}
 /**
  * Update user dropdown visibility
  */
@@ -357,7 +353,7 @@ function updateAdminUI() {
             adminBtn.className = 'btn btn-outline-warning btn-sm me-2 hover-lift';
             adminBtn.innerHTML = '<i class="fas fa-cogs me-1"></i>Quản trị';
             adminBtn.style.display = 'none';
-            adminBtn.onclick = function() { showProductAdminPage(); };
+            adminBtn.onclick = function() { showAdminDashboard(); };
             nav.appendChild(adminBtn);
         }
     }
@@ -423,4 +419,513 @@ window.testOrderHistory = testOrderHistory;
 window.testAddToWishlist = testAddToWishlist;
 window.testCoupon = testCoupon;
 window.clearAllData = clearAllData;
+
+// ===== ADMIN DASHBOARD FUNCTIONS =====
+
+/**
+ * Check if current user is admin
+ */
+function isAdmin() {
+    const user = getCurrentUser();
+    return user && user.isAdmin === true;
+}
+
+/**
+ * Show admin menu in user dropdown
+ */
+function updateAdminMenu() {
+    const adminMenu = document.getElementById('admin-menu');
+    if (adminMenu) {
+        if (isAdmin()) {
+            adminMenu.style.display = 'block';
+        } else {
+            adminMenu.style.display = 'none';
+        }
+    }
+}
+
+/**
+ * Show admin dashboard
+ */
+function showAdminDashboard() {
+    // Hide main content
+    document.querySelector('main').style.display = 'none';
+    document.querySelector('.breadcrumb').style.display = 'none';
+    
+    // Show admin dashboard
+    document.getElementById('admin-dashboard').style.display = 'block';
+    
+    // Load admin data
+    loadAdminData();
+}
+
+/**
+ * Hide admin dashboard
+ */
+function hideAdminDashboard() {
+    // Show main content
+    document.querySelector('main').style.display = 'block';
+    document.querySelector('.breadcrumb').style.display = 'block';
+    
+    // Hide admin dashboard
+    document.getElementById('admin-dashboard').style.display = 'none';
+}
+
+/**
+ * Load admin dashboard data
+ */
+async function loadAdminData() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            updateAdminStats(data.stats);
+            updateRecentOrders(data.recentOrders);
+        }
+    } catch (error) {
+        console.error('Error loading admin data:', error);
+    }
+}
+
+/**
+ * Update admin statistics
+ */
+function updateAdminStats(stats) {
+    document.getElementById('admin-total-users').textContent = stats.totalUsers || 0;
+    document.getElementById('admin-total-products').textContent = stats.totalProducts || 0;
+    document.getElementById('admin-total-orders').textContent = stats.totalOrders || 0;
+    document.getElementById('admin-total-revenue').textContent = `$${stats.totalRevenue || 0}`;
+}
+
+/**
+ * Update recent orders table
+ */
+function updateRecentOrders(orders) {
+    const tbody = document.getElementById('admin-recent-orders');
+    tbody.innerHTML = '';
+
+    orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order._id.slice(-8)}</td>
+            <td>${order.userId?.fullname || 'N/A'}</td>
+            <td>${order.items.length} items</td>
+            <td>$${order.totalAmount}</td>
+            <td><span class="status-badge ${order.status}">${order.status}</span></td>
+            <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Show admin products section
+ */
+function showAdminProducts() {
+    // Switch to products section
+    switchAdminSection('admin-products');
+    loadAdminProducts();
+}
+
+/**
+ * Show admin orders section
+ */
+function showAdminOrders() {
+    // Switch to orders section
+    switchAdminSection('admin-orders');
+    loadAdminOrders();
+}
+
+/**
+ * Show admin users section
+ */
+function showAdminUsers() {
+    // Switch to users section
+    switchAdminSection('admin-users');
+    loadAdminUsers();
+}
+
+/**
+ * Switch admin section
+ */
+function switchAdminSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.admin-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Show selected section
+    document.getElementById(sectionId).classList.add('active');
+    
+    // Update nav links
+    document.querySelectorAll('.admin-nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // Find and activate the corresponding nav link
+    const navLink = document.querySelector(`[data-section="${sectionId}"]`);
+    if (navLink) {
+        navLink.classList.add('active');
+    }
+}
+
+/**
+ * Load admin products
+ */
+async function loadAdminProducts() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/products`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayAdminProducts(data.products);
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+    }
+}
+
+/**
+ * Display admin products
+ */
+function displayAdminProducts(products) {
+    const tbody = document.getElementById('admin-products-table');
+    tbody.innerHTML = '';
+
+    products.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>${product.platform}</td>
+            <td>$${product.price}</td>
+            <td>${product.isSale ? `${product.salePercentage}%` : 'No'}</td>
+            <td>
+                <button class="admin-action-btn edit" onclick="editAdminProduct('${product._id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="admin-action-btn delete" onclick="deleteAdminProduct('${product._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Load admin orders
+ */
+async function loadAdminOrders() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/orders`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayAdminOrders(data.orders);
+        }
+    } catch (error) {
+        console.error('Error loading orders:', error);
+    }
+}
+
+/**
+ * Display admin orders
+ */
+function displayAdminOrders(orders) {
+    const tbody = document.getElementById('admin-orders-table');
+    tbody.innerHTML = '';
+
+    orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order._id.slice(-8)}</td>
+            <td>${order.userId?.fullname || 'N/A'}</td>
+            <td>${order.items.length} items</td>
+            <td>$${order.totalAmount}</td>
+            <td>
+                <select onchange="updateAdminOrderStatus('${order._id}', this.value)">
+                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                    <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+            </td>
+            <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="admin-action-btn delete" onclick="deleteAdminOrder('${order._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Load admin users
+ */
+async function loadAdminUsers() {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const users = await response.json();
+            displayAdminUsers(users);
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+    }
+}
+
+/**
+ * Display admin users
+ */
+function displayAdminUsers(users) {
+    const tbody = document.getElementById('admin-users-table');
+    tbody.innerHTML = '';
+
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user.fullname || 'N/A'}</td>
+            <td>${user.email}</td>
+            <td>${user.phone || 'N/A'}</td>
+            <td>${user.location || 'N/A'}</td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="admin-action-btn delete" onclick="deleteAdminUser('${user._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Show add product modal
+ */
+function showAddProductModal() {
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    document.getElementById('addProductForm').reset();
+    const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
+    modal.show();
+}
+
+/**
+ * Add product form submit
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const addProductForm = document.getElementById('addProductForm');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('addProductName').value,
+                description: document.getElementById('addProductDescription').value,
+                price: parseFloat(document.getElementById('addProductPrice').value),
+                originalPrice: parseFloat(document.getElementById('addProductOriginalPrice').value) || parseFloat(document.getElementById('addProductPrice').value),
+                category: document.getElementById('addProductCategory').value,
+                platform: document.getElementById('addProductPlatform').value,
+                imageUrl: document.getElementById('addProductImageUrl').value,
+                isSale: document.getElementById('addProductIsSale').checked,
+                salePercentage: parseInt(document.getElementById('addProductSalePercentage').value) || 0
+            };
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/api/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                if (response.ok) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+                    modal.hide();
+                    loadAdminProducts();
+                    showToast('Product added successfully!', 'success');
+                } else {
+                    const data = await response.json();
+                    showToast(data.message || 'Failed to add product', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding product:', error);
+                showToast('Failed to add product', 'error');
+            }
+        });
+    }
+});
+
+/**
+ * Delete admin product
+ */
+async function deleteAdminProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                loadAdminProducts();
+                showToast('Product deleted successfully!', 'success');
+            } else {
+                showToast('Failed to delete product', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            showToast('Failed to delete product', 'error');
+        }
+    }
+}
+
+/**
+ * Update admin order status
+ */
+async function updateAdminOrderStatus(orderId, status) {
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+
+        if (response.ok) {
+            showToast('Order status updated successfully!', 'success');
+        } else {
+            showToast('Failed to update order status', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showToast('Failed to update order status', 'error');
+    }
+}
+
+/**
+ * Delete admin order
+ */
+async function deleteAdminOrder(orderId) {
+    if (confirm('Are you sure you want to delete this order?')) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                loadAdminOrders();
+                showToast('Order deleted successfully!', 'success');
+            } else {
+                showToast('Failed to delete order', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            showToast('Failed to delete order', 'error');
+        }
+    }
+}
+
+/**
+ * Delete admin user
+ */
+async function deleteAdminUser(userId) {
+    if (confirm('Are you sure you want to delete this user?')) {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                loadAdminUsers();
+                showToast('User deleted successfully!', 'success');
+            } else {
+                showToast('Failed to delete user', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showToast('Failed to delete user', 'error');
+        }
+    }
+}
+
+// Add admin navigation event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Admin nav links
+    document.querySelectorAll('.admin-nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Remove active class from all links
+            document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
+            
+            // Add active class to clicked link
+            link.classList.add('active');
+            
+            // Get section ID
+            const sectionId = link.getAttribute('data-section');
+            if (sectionId) {
+                switchAdminSection(sectionId);
+                
+                // Load section data
+                switch(sectionId) {
+                    case 'admin-overview':
+                        loadAdminData();
+                        break;
+                    case 'admin-products':
+                        loadAdminProducts();
+                        break;
+                    case 'admin-orders':
+                        loadAdminOrders();
+                        break;
+                    case 'admin-users':
+                        loadAdminUsers();
+                        break;
+                }
+            }
+        });
+    });
+});
 
