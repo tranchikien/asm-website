@@ -399,6 +399,207 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
+// Cart Routes (MongoDB-based)
+app.get('/api/cart', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Get cart from user document
+        const cart = user.cart || [];
+        res.json(cart);
+    } catch (error) {
+        console.error('Get cart error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('/api/cart/add', authenticateToken, async (req, res) => {
+    try {
+        const { productId, quantity = 1 } = req.body;
+        
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Get product details
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        // Initialize cart if not exists
+        if (!user.cart) {
+            user.cart = [];
+        }
+        
+        // Check if product already in cart
+        const existingItem = user.cart.find(item => item.productId.toString() === productId);
+        
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            user.cart.push({
+                productId: product._id,
+                name: product.name,
+                price: product.price,
+                image: product.imageUrl,
+                quantity: quantity
+            });
+        }
+        
+        await user.save();
+        res.json({ message: 'Product added to cart', cart: user.cart });
+    } catch (error) {
+        console.error('Add to cart error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.put('/api/cart/update', authenticateToken, async (req, res) => {
+    try {
+        const { productId, quantity } = req.body;
+        
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        const cartItem = user.cart.find(item => item.productId.toString() === productId);
+        if (!cartItem) {
+            return res.status(404).json({ message: 'Item not found in cart' });
+        }
+        
+        if (quantity <= 0) {
+            user.cart = user.cart.filter(item => item.productId.toString() !== productId);
+        } else {
+            cartItem.quantity = quantity;
+        }
+        
+        await user.save();
+        res.json({ message: 'Cart updated', cart: user.cart });
+    } catch (error) {
+        console.error('Update cart error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/api/cart/remove/:productId', authenticateToken, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        user.cart = user.cart.filter(item => item.productId.toString() !== productId);
+        await user.save();
+        
+        res.json({ message: 'Item removed from cart', cart: user.cart });
+    } catch (error) {
+        console.error('Remove from cart error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/api/cart/clear', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        user.cart = [];
+        await user.save();
+        
+        res.json({ message: 'Cart cleared' });
+    } catch (error) {
+        console.error('Clear cart error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Wishlist Routes (MongoDB-based)
+app.get('/api/wishlist', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        const wishlist = user.wishlist || [];
+        res.json(wishlist);
+    } catch (error) {
+        console.error('Get wishlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.post('/api/wishlist/add', authenticateToken, async (req, res) => {
+    try {
+        const { productId } = req.body;
+        
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Get product details
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        
+        // Initialize wishlist if not exists
+        if (!user.wishlist) {
+            user.wishlist = [];
+        }
+        
+        // Check if product already in wishlist
+        const existingItem = user.wishlist.find(item => item.productId.toString() === productId);
+        
+        if (existingItem) {
+            return res.status(400).json({ message: 'Product already in wishlist' });
+        }
+        
+        user.wishlist.push({
+            productId: product._id,
+            name: product.name,
+            price: product.price,
+            image: product.imageUrl
+        });
+        
+        await user.save();
+        res.json({ message: 'Product added to wishlist', wishlist: user.wishlist });
+    } catch (error) {
+        console.error('Add to wishlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+app.delete('/api/wishlist/remove/:productId', authenticateToken, async (req, res) => {
+    try {
+        const { productId } = req.params;
+        
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        user.wishlist = user.wishlist.filter(item => item.productId.toString() !== productId);
+        await user.save();
+        
+        res.json({ message: 'Item removed from wishlist', wishlist: user.wishlist });
+    } catch (error) {
+        console.error('Remove from wishlist error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 app.get('/api/products/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
