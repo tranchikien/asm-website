@@ -36,9 +36,7 @@ mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-    bufferMaxEntries: 0,
-    bufferCommands: false
+    socketTimeoutMS: 45000
 })
 .then(() => {
     console.log('✅ Successfully connected to MongoDB Atlas');
