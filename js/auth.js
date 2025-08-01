@@ -278,8 +278,9 @@ document.addEventListener('DOMContentLoaded', function() {
  * Logout function
  */
 function logout() {
-    // Clear user data
+    // Clear user data and token
     localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
     
     // Update UI immediately
     updateUserDropdown();
@@ -294,6 +295,10 @@ function logout() {
     // Ẩn modal tài khoản nếu đang mở
     const profileModal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
     if (profileModal) profileModal.hide();
+    
+    // Ẩn admin panel modal nếu đang mở
+    const adminModal = bootstrap.Modal.getInstance(document.getElementById('adminPanelModal'));
+    if (adminModal) adminModal.hide();
 }
 
 /**
@@ -308,6 +313,14 @@ function isLoggedIn() {
  */
 function getCurrentUser() {
     const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('authToken');
+    
+    // If no token, clear user data
+    if (!token) {
+        localStorage.removeItem('user');
+        return null;
+    }
+    
     const user = userData ? JSON.parse(userData) : null;
     console.log('getCurrentUser() called, result:', user);
     return user;
@@ -326,11 +339,12 @@ function updateUserProfile(userData) {
  */
 function updateUserDropdown() {
     const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
     const userDropdown = document.getElementById('user-dropdown');
     
-    if (user) {
+    if (user && token) {
         // User is logged in - show user dropdown, hide login/register
         if (loginBtn) loginBtn.style.display = 'none';
         if (registerBtn) registerBtn.style.display = 'none';
@@ -348,6 +362,11 @@ function updateUserDropdown() {
         if (registerBtn) registerBtn.style.display = 'inline-block';
         if (userDropdown) userDropdown.style.display = 'none';
         
+        // Clear any stale data
+        if (!token) {
+            localStorage.removeItem('user');
+        }
+        
         // Hide admin button
         const adminBtn = document.getElementById('admin-btn');
         if (adminBtn) adminBtn.style.display = 'none';
@@ -357,6 +376,52 @@ function updateUserDropdown() {
 function updateAdminUI() {
     // Update admin menu instead
     updateAdminMenu();
+}
+
+/**
+ * Validate current session and refresh user data if needed
+ */
+async function validateSession() {
+    const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
+    
+    if (!user || !token) {
+        // Clear any stale data
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        return false;
+    }
+    
+    try {
+        // Try to validate token with server
+        const response = await fetch(`${API_BASE_URL}/api/auth/validate`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // Update user data with fresh data from server
+            localStorage.setItem('user', JSON.stringify(data.user));
+            console.log('✅ Session validated successfully');
+            return true;
+        } else {
+            // Token is invalid, clear session
+            console.log('❌ Session validation failed, clearing data');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+            updateUserDropdown();
+            return false;
+        }
+    } catch (error) {
+        console.error('Session validation error:', error);
+        // On network error, clear session to be safe
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+        updateUserDropdown();
+        return false;
+    }
 } 
 
 // ===== DEBUG FUNCTIONS =====
@@ -369,6 +434,15 @@ function debugLocalStorage() {
     console.log('All localStorage:', localStorage);
     
     const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
+    
+    console.log('🔍 Session Debug:', {
+        hasUser: !!user,
+        hasToken: !!token,
+        userEmail: user ? user.email : 'N/A',
+        userIsAdmin: user ? user.isAdmin : 'N/A'
+    });
+    
     if (user) {
         console.log('✅ User is logged in:');
         console.log('  - Email:', user.email);
@@ -376,6 +450,7 @@ function debugLocalStorage() {
         console.log('  - Phone:', user.phone);
         console.log('  - Address:', user.address);
         console.log('  - Birthday:', user.birthday);
+        console.log('  - IsAdmin:', user.isAdmin);
     } else {
         console.log('❌ No user logged in');
     }
@@ -405,6 +480,42 @@ function clearAllData() {
     }
 }
 
+/**
+ * Clean up inconsistent session data
+ */
+function cleanupSessionData() {
+    const user = localStorage.getItem('user');
+    const token = localStorage.getItem('authToken');
+    
+    // If we have user data but no token, clear user data
+    if (user && !token) {
+        console.log('🧹 Cleaning up: User data without token');
+        localStorage.removeItem('user');
+    }
+    
+    // If we have token but no user data, clear token
+    if (token && !user) {
+        console.log('🧹 Cleaning up: Token without user data');
+        localStorage.removeItem('authToken');
+    }
+    
+    // If we have both, validate the data
+    if (user && token) {
+        try {
+            const userData = JSON.parse(user);
+            if (!userData.email || !userData.fullname) {
+                console.log('🧹 Cleaning up: Invalid user data');
+                localStorage.removeItem('user');
+                localStorage.removeItem('authToken');
+            }
+        } catch (error) {
+            console.log('🧹 Cleaning up: Corrupted user data');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+        }
+    }
+}
+
 // Thêm vào global scope để có thể gọi từ console
 window.debugLocalStorage = debugLocalStorage;
 window.debugUI = debugUI;
@@ -412,8 +523,10 @@ window.testProfileModal = testProfileModal;
 window.testWishlist = testWishlist;
 window.testOrderHistory = testOrderHistory;
 window.testAddToWishlist = testAddToWishlist;
+window.cleanupSessionData = cleanupSessionData;
 window.testCoupon = testCoupon;
 window.clearAllData = clearAllData;
+window.validateSession = validateSession;
 
 // ===== ADMIN DASHBOARD FUNCTIONS =====
 
@@ -422,12 +535,22 @@ window.clearAllData = clearAllData;
  */
 function isAdmin() {
     const user = getCurrentUser();
-    const isAdminUser = user && user.isAdmin === true;
+    const token = localStorage.getItem('authToken');
+    
+    // Check if user exists and has valid token
+    if (!user || !token) {
+        console.log('🔍 Admin Check: No user or token');
+        return false;
+    }
+    
+    // Check if user has admin privileges
+    const isAdminUser = user.isAdmin === true;
     
     // Debug log
     console.log('🔍 Admin Check:', {
-        user: user ? user.email : 'No user',
+        user: user.email,
         isAdmin: isAdminUser,
+        hasToken: !!token,
         userData: user
     });
     
@@ -459,7 +582,14 @@ function updateAdminMenu() {
 /**
  * Open admin panel modal
  */
-function openAdminPanel() {
+async function openAdminPanel() {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -484,6 +614,13 @@ function showAdminDashboard() {
  * Load admin dashboard data
  */
 async function loadAdminData() {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -617,6 +754,13 @@ function switchAdminSection(sectionId) {
  * Load admin products
  */
 async function loadAdminProducts() {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -675,6 +819,13 @@ function displayAdminProducts(products) {
  * Load admin orders
  */
 async function loadAdminOrders() {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -739,9 +890,16 @@ function displayAdminOrders(orders) {
  * Load admin users
  */
 async function loadAdminUsers() {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
-        showToast('Access denied. Admin privileges required.', 'error');
+        showToast('Session expired. Please login again.', 'error');
         return;
     }
     
@@ -867,6 +1025,13 @@ document.addEventListener('DOMContentLoaded', function() {
  * Delete admin product
  */
 async function deleteAdminProduct(productId) {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -902,6 +1067,13 @@ async function deleteAdminProduct(productId) {
  * Update admin order status
  */
 async function updateAdminOrderStatus(orderId, status) {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -936,6 +1108,13 @@ async function updateAdminOrderStatus(orderId, status) {
  * Delete admin order
  */
 async function deleteAdminOrder(orderId) {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
@@ -971,6 +1150,13 @@ async function deleteAdminOrder(orderId) {
  * Delete admin user
  */
 async function deleteAdminUser(userId) {
+    // Validate session first
+    const isValidSession = await validateSession();
+    if (!isValidSession) {
+        showToast('Session expired. Please login again.', 'error');
+        return;
+    }
+    
     // Check if user is admin
     if (!isAdmin()) {
         showToast('Access denied. Admin privileges required.', 'error');
