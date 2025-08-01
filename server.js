@@ -193,7 +193,8 @@ app.post('/api/auth/register', async (req, res) => {
                 phone: user.phone,
                 address: user.address,
                 birthday: user.birthday,
-                location: user.location
+                location: user.location,
+                isAdmin: user.isAdmin
             }
         });
     } catch (error) {
@@ -263,7 +264,8 @@ app.post('/api/auth/login', async (req, res) => {
                 phone: user.phone,
                 address: user.address,
                 birthday: user.birthday,
-                location: user.location
+                location: user.location,
+                isAdmin: user.isAdmin
             }
         });
     } catch (error) {
