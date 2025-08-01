@@ -25,26 +25,20 @@ app.use(express.json());
 app.use(express.static('.')); // Serve static files
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-
-if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI environment variable is not set!');
-    console.error('Please set MONGODB_URI in your Railway environment variables.');
-    process.exit(1);
-}
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/test?retryWrites=true&w=majority';
 
 console.log('🔗 Attempting to connect to MongoDB...');
 console.log('📋 Environment variables:');
 console.log('   - MONGODB_URI from env:', process.env.MONGODB_URI ? 'SET' : 'NOT SET');
 console.log('   - NODE_ENV:', process.env.NODE_ENV);
-console.log('📋 MONGODB_URI:', MONGODB_URI);
-console.log('📋 Connection string format check:', MONGODB_URI.includes('mongodb+srv://') ? '✅ Atlas format' : '❌ Wrong format');
 
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    bufferMaxEntries: 0,
+    bufferCommands: false
 })
 .then(() => {
     console.log('✅ Successfully connected to MongoDB Atlas');
@@ -86,51 +80,10 @@ mongoose.connection.on('reconnected', () => {
     console.log('🔄 MongoDB reconnected');
 });
 
-// User Schema
-const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    fullname: String,
-    phone: String,
-    address: String,
-    birthday: Date,
-    location: String,
-    isAdmin: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-});
-
-// Product Schema
-const productSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    description: String,
-    price: { type: Number, required: true },
-    originalPrice: Number,
-    category: String,
-    platform: String,
-    imageUrl: String,
-    isSale: { type: Boolean, default: false },
-    salePercentage: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now }
-});
-
-// Order Schema
-const orderSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    items: [{
-        productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-        quantity: Number,
-        price: Number
-    }],
-    totalAmount: Number,
-    paymentMethod: String,
-    status: { type: String, default: 'pending' },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const User = mongoose.model('User', userSchema);
-const Product = mongoose.model('Product', productSchema);
-const Order = mongoose.model('Order', orderSchema);
+// Import Models
+const User = require('./models/User');
+const Product = require('./models/Product');
+const Order = require('./models/Order');
 
 // JWT Middleware
 const authenticateToken = (req, res, next) => {
