@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test MongoDB System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; background-color: #007bff; color: white; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .warning { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🗄️ Test MongoDB System</h1>
+    
+    <div class="test-section">
+        <h2>👤 User Management</h2>
+        <button onclick="testUserRegistration()">Test User Registration</button>
+        <button onclick="testUserLogin()">Test User Login</button>
+        <button onclick="testAdminLogin()">Test Admin Login</button>
+        <div id="user-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🛒 Cart Management</h2>
+        <button onclick="testAddToCart()">Test Add to Cart</button>
+        <button onclick="testGetCart()">Test Get Cart</button>
+        <button onclick="testUpdateCart()">Test Update Cart</button>
+        <button onclick="testRemoveFromCart()">Test Remove from Cart</button>
+        <button onclick="testClearCart()">Test Clear Cart</button>
+        <div id="cart-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>❤️ Wishlist Management</h2>
+        <button onclick="testAddToWishlist()">Test Add to Wishlist</button>
+        <button onclick="testGetWishlist()">Test Get Wishlist</button>
+        <button onclick="testRemoveFromWishlist()">Test Remove from Wishlist</button>
+        <div id="wishlist-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📦 Product Management</h2>
+        <button onclick="testGetProducts()">Test Get Products</button>
+        <button onclick="testAddProduct()">Test Add Product</button>
+        <button onclick="testUpdateProduct()">Test Update Product</button>
+        <button onclick="testDeleteProduct()">Test Delete Product</button>
+        <div id="product-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔐 Session Management</h2>
+        <button onclick="checkSession()">Check Current Session</button>
+        <button onclick="clearSession()">Clear Session</button>
+        <div id="session-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://asm-website-production.up.railway.app';
+        let currentUser = null;
+        let currentToken = null;
+        let testProductId = null;
+
+        // User Management Tests
+        async function testUserRegistration() {
+            const result = document.getElementById('user-result');
+            result.innerHTML = '<div class="info">Testing user registration...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'test123',
+                        fullname: 'Test User'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ User registration successful!<br>
+                            User: ${data.user.email}<br>
+                            IsAdmin: ${data.user.isAdmin}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Registration failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testUserLogin() {
+            const result = document.getElementById('user-result');
+            result.innerHTML = '<div class="info">Testing user login...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'test123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentUser = data.user;
+                    currentToken = data.token;
+                    
+                    // Store in session storage
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    sessionStorage.setItem('authToken', data.token);
+                    
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ User login successful!<br>
+                            User: ${data.user.email}<br>
+                            IsAdmin: ${data.user.isAdmin}<br>
+                            Token: ${data.token ? 'Present' : 'Missing'}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAdminLogin() {
+            const result = document.getElementById('user-result');
+            result.innerHTML = '<div class="info">Testing admin login...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@asm.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentUser = data.user;
+                    currentToken = data.token;
+                    
+                    // Store in session storage
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    sessionStorage.setItem('authToken', data.token);
+                    
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Admin login successful!<br>
+                            User: ${data.user.email}<br>
+                            IsAdmin: ${data.user.isAdmin}<br>
+                            Token: ${data.token ? 'Present' : 'Missing'}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Admin login failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Cart Management Tests
+        async function testAddToCart() {
+            const result = document.getElementById('cart-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing add to cart...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cart/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        productId: '507f1f77bcf86cd799439011', // Test product ID
+                        quantity: 1
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Added to cart successfully!<br>
+                            Cart items: ${data.cart.length}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Add to cart failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetCart() {
+            const result = document.getElementById('cart-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing get cart...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cart`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Cart retrieved successfully!<br>
+                            Items: ${data.length}<br>
+                            Cart: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Get cart failed: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testUpdateCart() {
+            const result = document.getElementById('cart-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing update cart...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cart/update`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        productId: '507f1f77bcf86cd799439011',
+                        quantity: 2
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Cart updated successfully!<br>
+                            Cart items: ${data.cart.length}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Update cart failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRemoveFromCart() {
+            const result = document.getElementById('cart-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing remove from cart...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cart/remove/507f1f77bcf86cd799439011`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Removed from cart successfully!<br>
+                            Cart items: ${data.cart.length}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Remove from cart failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testClearCart() {
+            const result = document.getElementById('cart-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing clear cart...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/cart/clear`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Cart cleared successfully!
+                        </div>
+                    `;
+                } else {
+                    const data = await response.json();
+                    result.innerHTML = `<div class="error">❌ Clear cart failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Wishlist Management Tests
+        async function testAddToWishlist() {
+            const result = document.getElementById('wishlist-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing add to wishlist...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/wishlist/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        productId: '507f1f77bcf86cd799439011'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Added to wishlist successfully!<br>
+                            Wishlist items: ${data.wishlist.length}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Add to wishlist failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetWishlist() {
+            const result = document.getElementById('wishlist-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing get wishlist...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Wishlist retrieved successfully!<br>
+                            Items: ${data.length}<br>
+                            Wishlist: ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Get wishlist failed: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testRemoveFromWishlist() {
+            const result = document.getElementById('wishlist-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing remove from wishlist...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/wishlist/remove/507f1f77bcf86cd799439011`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Removed from wishlist successfully!<br>
+                            Wishlist items: ${data.wishlist.length}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Remove from wishlist failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Product Management Tests
+        async function testGetProducts() {
+            const result = document.getElementById('product-result');
+            result.innerHTML = '<div class="info">Testing get products...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Products retrieved successfully!<br>
+                            Count: ${data.length}<br>
+                            First product: ${data[0] ? data[0].name : 'None'}
+                        </div>
+                    `;
+                    if (data.length > 0) {
+                        testProductId = data[0]._id;
+                    }
+                } else {
+                    result.innerHTML = `<div class="error">❌ Get products failed: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testAddProduct() {
+            const result = document.getElementById('product-result');
+            if (!currentToken) {
+                result.innerHTML = '<div class="warning">⚠️ Please login as admin first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing add product...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        name: 'Test Game',
+                        description: 'A test game for testing',
+                        price: 100000,
+                        category: 'Test',
+                        platform: 'Test Platform',
+                        imageUrl: 'https://via.placeholder.com/300x200'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Product added successfully!<br>
+                            Product ID: ${data._id}<br>
+                            Name: ${data.name}
+                        </div>
+                    `;
+                    testProductId = data._id;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Add product failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testUpdateProduct() {
+            const result = document.getElementById('product-result');
+            if (!currentToken || !testProductId) {
+                result.innerHTML = '<div class="warning">⚠️ Please login as admin and add a product first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing update product...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products/${testProductId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({
+                        name: 'Updated Test Game',
+                        price: 150000
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Product updated successfully!<br>
+                            Name: ${data.name}<br>
+                            Price: ${data.price}
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Update product failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testDeleteProduct() {
+            const result = document.getElementById('product-result');
+            if (!currentToken || !testProductId) {
+                result.innerHTML = '<div class="warning">⚠️ Please login as admin and add a product first</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="info">Testing delete product...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products/${testProductId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            ✅ Product deleted successfully!
+                        </div>
+                    `;
+                    testProductId = null;
+                } else {
+                    const data = await response.json();
+                    result.innerHTML = `<div class="error">❌ Delete product failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Session Management Tests
+        function checkSession() {
+            const result = document.getElementById('session-result');
+            const user = sessionStorage.getItem('user');
+            const token = sessionStorage.getItem('authToken');
+            
+            result.innerHTML = `
+                <div class="info">
+                    <strong>Current Session:</strong><br>
+                    User: ${user ? JSON.parse(user).email : 'None'}<br>
+                    Token: ${token ? 'Present' : 'Missing'}<br>
+                    Session Storage: ${JSON.stringify(sessionStorage, null, 2)}
+                </div>
+            `;
+        }
+
+        function clearSession() {
+            sessionStorage.clear();
+            currentUser = null;
+            currentToken = null;
+            
+            const result = document.getElementById('session-result');
+            result.innerHTML = `
+                <div class="success">
+                    ✅ Session cleared successfully!
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 
