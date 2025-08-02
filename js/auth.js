@@ -18,27 +18,27 @@ async function isEmailExists(email) {
  */
 function validatePasswordStrength(password) {
     const errors = [];
-    
+
     if (password.length < 8) {
         errors.push('Mật khẩu phải có ít nhất 8 ký tự');
     }
-    
+
     if (!/[A-Z]/.test(password)) {
         errors.push('Mật khẩu phải có ít nhất 1 ký tự viết hoa');
     }
-    
+
     if (!/[a-z]/.test(password)) {
         errors.push('Mật khẩu phải có ít nhất 1 ký tự viết thường');
     }
-    
+
     if (!/\d/.test(password)) {
         errors.push('Mật khẩu phải có ít nhất 1 số');
     }
-    
+
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
         errors.push('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*)');
     }
-    
+
     return {
         isValid: errors.length === 0,
         errors: errors
@@ -62,7 +62,7 @@ async function registerUser(userData) {
                 location: userData.location || ''
             })
         });
-        
+
         return { success: true, message: 'Đăng ký thành công!', data: response };
     } catch (error) {
         return { success: false, message: error.message || 'Đăng ký thất bại!' };
@@ -81,7 +81,7 @@ async function authenticateUser(email, password) {
                 password: password
             })
         });
-        
+
         return { success: true, user: response.user, token: response.token };
     } catch (error) {
         return { success: false, message: error.message || 'Email hoặc mật khẩu không đúng!' };
@@ -91,30 +91,30 @@ async function authenticateUser(email, password) {
 function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-    
+
     if (!email || !password) {
         showToast('Vui lòng nhập đầy đủ thông tin', 'error');
         return;
     }
-    
+
     if (!isValidEmail(email)) {
         showToast('Email không hợp lệ', 'error');
         return;
     }
-    
+
     // Show loading
     const loginBtn = document.querySelector('#loginForm button[type="submit"]');
     const originalText = loginBtn.innerHTML;
     loginBtn.innerHTML = '<span class="loading"></span> Đang đăng nhập...';
     loginBtn.disabled = true;
-    
+
     // Authenticate user (async)
     authenticateUser(email, password).then(result => {
         if (result.success) {
             // Login successful
             const user = result.user;
             const token = result.token;
-            
+
             console.log('🔐 Login Response:', {
                 user: user,
                 hasIsAdmin: 'isAdmin' in user,
@@ -122,31 +122,31 @@ function handleLogin() {
                 isAdminType: typeof user.isAdmin,
                 token: token ? 'Present' : 'Missing'
             });
-            
+
             // Save current user session and token
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('authToken', token);
-            
+
             console.log('💾 Saved to localStorage:', {
                 user: JSON.parse(localStorage.getItem('user')),
                 token: localStorage.getItem('authToken') ? 'Present' : 'Missing'
             });
-            
+
             showToast('Đăng nhập thành công!', 'success');
-            
+
             // Update UI immediately
             updateUserDropdown();
-            
+
             // Force update admin menu with delay to ensure DOM is ready
             setTimeout(() => {
                 console.log('🔄 Forcing admin menu update after login...');
                 updateAdminMenu();
             }, 100);
-            
+
             // Update profile page
             const profileUsername = document.getElementById('profile-username');
             if (profileUsername) profileUsername.textContent = user.fullName || user.fullname;
-            
+
             // Close modal
             const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
             if (loginModal) loginModal.hide();
@@ -154,7 +154,7 @@ function handleLogin() {
             // Login failed
             showToast(result.message, 'error');
         }
-        
+
         // Reset button
         loginBtn.innerHTML = originalText;
         loginBtn.disabled = false;
@@ -174,40 +174,40 @@ function handleRegister() {
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const agreeTerms = document.getElementById('agreeTerms').checked;
-    
+
     if (!username || !email || !password || !confirmPassword) {
         showToast('Vui lòng nhập đầy đủ thông tin', 'error');
         return;
     }
-    
+
     if (!isValidEmail(email)) {
         showToast('Email không hợp lệ', 'error');
         return;
     }
-    
+
     // Kiểm tra độ mạnh mật khẩu
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
         showToast(passwordValidation.errors[0], 'error');
         return;
     }
-    
+
     if (password !== confirmPassword) {
         showToast('Mật khẩu xác nhận không khớp', 'error');
         return;
     }
-    
+
     if (!agreeTerms) {
         showToast('Vui lòng đồng ý với điều khoản sử dụng', 'error');
         return;
     }
-    
+
     // Show loading
     const registerBtn = document.querySelector('#registerForm button[type="submit"]');
     const originalText = registerBtn.innerHTML;
     registerBtn.innerHTML = '<span class="loading"></span> Đang đăng ký...';
     registerBtn.disabled = true;
-    
+
     // Register user (async)
     registerUser({
         email: email,
@@ -221,14 +221,14 @@ function handleRegister() {
         if (result.success) {
             // Registration successful
             showToast(result.message, 'success');
-            
+
             // Clear form
             document.getElementById('registerForm').reset();
-            
+
             // Close modal
             const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
             if (registerModal) registerModal.hide();
-            
+
             // Show login modal
             const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
             loginModal.show();
@@ -236,7 +236,7 @@ function handleRegister() {
             // Registration failed
             showToast(result.message, 'error');
         }
-        
+
         // Reset button
         registerBtn.innerHTML = originalText;
         registerBtn.disabled = false;
@@ -252,13 +252,13 @@ function logout() {
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
     localStorage.removeItem('cart');
-    
+
     // Update UI
     updateUserDropdown();
-    
+
     // Show logout message
     showToast('Đã đăng xuất thành công!', 'success');
-    
+
     // Redirect to home page
     showHomePage();
 }
@@ -272,7 +272,7 @@ function isLoggedIn() {
 function getCurrentUser() {
     const user = localStorage.getItem('user');
     if (!user) return null;
-    
+
     try {
         return JSON.parse(user);
     } catch (error) {
@@ -297,17 +297,17 @@ function updateUserDropdown() {
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
     const userDropdown = document.getElementById('user-dropdown');
-    
+
     if (user && token) {
         // User is logged in - show user dropdown, hide login/register
         if (loginBtn) loginBtn.style.display = 'none';
         if (registerBtn) registerBtn.style.display = 'none';
         if (userDropdown) userDropdown.style.display = 'block';
-        
+
         // Update user name in dropdown
         const userNameEl = document.getElementById('user-name');
         if (userNameEl) userNameEl.textContent = user.fullname;
-        
+
         // Update admin menu
         updateAdminMenu();
     } else {
@@ -315,7 +315,7 @@ function updateUserDropdown() {
         if (loginBtn) loginBtn.style.display = 'inline-block';
         if (registerBtn) registerBtn.style.display = 'inline-block';
         if (userDropdown) userDropdown.style.display = 'none';
-        
+
         // Clear any stale data
         if (!token) {
             localStorage.removeItem('user');
@@ -329,14 +329,14 @@ function updateUserDropdown() {
 async function validateSession() {
     const user = getCurrentUser();
     const token = localStorage.getItem('authToken');
-    
+
     if (!user || !token) {
         // Clear any stale data
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
         return false;
     }
-    
+
     try {
         // Try to validate token with server
         const response = await fetch(`${API_BASE_URL}/api/auth/validate`, {
@@ -344,7 +344,7 @@ async function validateSession() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             // Update user data with fresh data from server
@@ -377,10 +377,10 @@ async function validateSession() {
 function debugLocalStorage() {
     console.log('=== LOCAL STORAGE DEBUG ===');
     console.log('All localStorage:', localStorage);
-    
+
     const user = getCurrentUser();
     const token = localStorage.getItem('authToken');
-    
+
     console.log('🔍 Session Debug:', {
         user: user,
         token: token ? 'Present' : 'Missing',
@@ -403,14 +403,14 @@ function clearAllData() {
 function cleanupSessionData() {
     const user = getCurrentUser();
     const token = localStorage.getItem('authToken');
-    
+
     if (!user || !token) {
         // Clear any stale data
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
         console.log('🧹 Cleaned up stale session data');
     }
-    
+
     updateUserDropdown();
 }
 
@@ -422,14 +422,14 @@ function cleanupSessionData() {
 function isAdmin() {
     const user = getCurrentUser();
     const token = localStorage.getItem('authToken');
-    
+
     if (!user || !token) {
         console.log('🔍 Admin Check: No user or token');
         return false;
     }
-    
+
     const isAdminUser = user.isAdmin === true;
-    
+
     console.log('🔍 Admin Check:', {
         user: user.email,
         isAdmin: isAdminUser,
@@ -437,7 +437,7 @@ function isAdmin() {
         userIsAdminField: user.isAdmin,
         userIsAdminType: typeof user.isAdmin
     });
-    
+
     return isAdminUser;
 }
 
@@ -447,13 +447,13 @@ function isAdmin() {
 function updateAdminMenu() {
     const adminMenu = document.getElementById('admin-menu');
     const isAdminUser = isAdmin();
-    
+
     console.log('🔧 Update Admin Menu:', {
         adminMenu: adminMenu ? 'Found' : 'Not found',
         isAdmin: isAdminUser,
         display: isAdminUser ? 'block' : 'none'
     });
-    
+
     if (adminMenu) {
         if (isAdminUser) {
             adminMenu.style.display = 'block';
@@ -475,10 +475,10 @@ async function openAdminPanel() {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     const modal = new bootstrap.Modal(document.getElementById('adminPanelModal'));
     modal.show();
-    
+
     // Load admin data
     loadAdminData();
 }
@@ -491,7 +491,7 @@ async function loadAdminData() {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
@@ -499,7 +499,7 @@ async function loadAdminData() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const data = await response.json();
             updateAdminStats(data);
@@ -529,7 +529,7 @@ function updateAdminStats(stats) {
 function updateRecentOrders(orders) {
     const tbody = document.getElementById('admin-recent-orders');
     tbody.innerHTML = '';
-    
+
     orders.forEach(order => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -576,18 +576,18 @@ function switchAdminSection(sectionId) {
     document.querySelectorAll('.tab-pane').forEach(section => {
         section.classList.remove('show', 'active');
     });
-    
+
     // Show selected section
     const selectedSection = document.getElementById(sectionId);
     if (selectedSection) {
         selectedSection.classList.add('show', 'active');
     }
-    
+
     // Update nav links
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    
+
     const activeNavLink = document.querySelector(`[data-bs-target="#${sectionId}"]`);
     if (activeNavLink) {
         activeNavLink.classList.add('active');
@@ -602,7 +602,7 @@ async function loadAdminProducts() {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/products`, {
@@ -610,7 +610,7 @@ async function loadAdminProducts() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const products = await response.json();
             displayAdminProducts(products);
@@ -629,7 +629,7 @@ async function loadAdminProducts() {
 function displayAdminProducts(products) {
     const tbody = document.getElementById('admin-products-table');
     tbody.innerHTML = '';
-    
+
     products.forEach(product => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -659,7 +659,7 @@ async function loadAdminOrders() {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/orders`, {
@@ -667,7 +667,7 @@ async function loadAdminOrders() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const orders = await response.json();
             displayAdminOrders(orders);
@@ -686,7 +686,7 @@ async function loadAdminOrders() {
 function displayAdminOrders(orders) {
     const tbody = document.getElementById('admin-orders-table');
     tbody.innerHTML = '';
-    
+
     orders.forEach(order => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -722,7 +722,7 @@ async function loadAdminUsers() {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
@@ -730,7 +730,7 @@ async function loadAdminUsers() {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const users = await response.json();
             displayAdminUsers(users);
@@ -749,7 +749,7 @@ async function loadAdminUsers() {
 function displayAdminUsers(users) {
     const tbody = document.getElementById('admin-users-table');
     tbody.innerHTML = '';
-    
+
     users.forEach(user => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -776,7 +776,7 @@ function showAddProductModal() {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     document.getElementById('productModalTitle').textContent = 'Add Product';
     document.getElementById('addProductForm').reset();
     const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
@@ -791,9 +791,9 @@ async function deleteAdminProduct(productId) {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     if (!confirm('Are you sure you want to delete this product?')) return;
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}`, {
@@ -802,7 +802,7 @@ async function deleteAdminProduct(productId) {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             showToast('Product deleted successfully', 'success');
             loadAdminProducts();
@@ -823,7 +823,7 @@ async function updateAdminOrderStatus(orderId, status) {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
@@ -834,7 +834,7 @@ async function updateAdminOrderStatus(orderId, status) {
             },
             body: JSON.stringify({ status })
         });
-        
+
         if (response.ok) {
             showToast('Order status updated successfully', 'success');
             loadAdminOrders();
@@ -855,9 +855,9 @@ async function deleteAdminOrder(orderId) {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     if (!confirm('Are you sure you want to delete this order?')) return;
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}`, {
@@ -866,7 +866,7 @@ async function deleteAdminOrder(orderId) {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             showToast('Order deleted successfully', 'success');
             loadAdminOrders();
@@ -887,9 +887,9 @@ async function deleteAdminUser(userId) {
         showToast('Access denied. Admin privileges required.', 'error');
         return;
     }
-    
+
     if (!confirm('Are you sure you want to delete this user?')) return;
-    
+
     try {
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
@@ -898,7 +898,7 @@ async function deleteAdminUser(userId) {
                 'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             showToast('User deleted successfully', 'success');
             loadAdminUsers();
@@ -919,69 +919,61 @@ const ADMIN_CREDENTIALS = {
 };
 
 function login(email, password) {
-    // Check if it's the admin account
-    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-        const adminUser = { ...ADMIN_CREDENTIALS };
-        localStorage.setItem('currentUser', JSON.stringify(adminUser));
-        showAdminPanel();
-        return true;
-    }
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
 
-    // Regular user login logic
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-        user.role = user.role || 'user'; // Ensure role exists
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        hideAdminPanel();
-        return true;
-    }
-    
-    return false;
-}
+        const data = await response.json();
 
-function showAdminPanel() {
-    const adminPanel = document.querySelector('.admin-panel');
-    if (adminPanel) {
-        adminPanel.style.display = 'block';
-    }
-}
+        if (response.ok) {
+            // Lưu token và thông tin user
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
 
-function hideAdminPanel() {
-    const adminPanel = document.querySelector('.admin-panel');
-    if (adminPanel) {
-        adminPanel.style.display = 'none';
-    }
-}
+            // Kiểm tra và hiển thị Admin Panel nếu là admin
+            if (data.user.isAdmin) {
+                document.getElementById('admin-menu').style.display = 'block';
+            } else {
+                document.getElementById('admin-menu').style.display = 'none';
+            }
 
-function checkAdminAccess() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser || currentUser.role !== 'admin') {
-        window.location.href = '/login.html';
-    }
-}
-
-// Add this to your initialization code
-document.addEventListener('DOMContentLoaded', () => {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser) {
-        if (currentUser.role === 'admin') {
-            showAdminPanel();
-        } else {
-            hideAdminPanel();
+            return true;
         }
+        return false;
+    } catch (error) {
+        console.error('Login error:', error);
+        return false;
     }
+}
+
+// Thêm function kiểm tra quyền admin
+function checkAdminStatus() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.isAdmin) {
+        document.getElementById('admin-menu').style.display = 'block';
+    } else {
+        document.getElementById('admin-menu').style.display = 'none';
+    }
+}
+
+// Thêm function này vào document ready
+document.addEventListener('DOMContentLoaded', () => {
+    checkAdminStatus();
 });
 
 // ===== FORM EVENT LISTENERS =====
 
-document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+document.getElementById('loginForm')?.addEventListener('submit', function (e) {
     e.preventDefault();
     handleLogin();
 });
 
-document.getElementById('registerForm')?.addEventListener('submit', function(e) {
+document.getElementById('registerForm')?.addEventListener('submit', function (e) {
     e.preventDefault();
     handleRegister();
 });
@@ -989,7 +981,7 @@ document.getElementById('registerForm')?.addEventListener('submit', function(e) 
 // ===== INITIALIZATION =====
 
 // Check login status when page loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     updateUserDropdown();
 });
 
