@@ -69,6 +69,7 @@ CREATE TABLE users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'user',  /* Add this line */
     fullname VARCHAR(255),
     phone VARCHAR(20),
     address TEXT,
@@ -130,6 +131,12 @@ CREATE TABLE orders (
 - `POST /api/orders` - Tạo đơn hàng
 - `GET /api/orders` - Lấy lịch sử đơn hàng
 - `GET /api/orders/:id` - Lấy chi tiết đơn hàng
+
+### Admin
+- `GET /api/admin/dashboard` - Admin dashboard statistics
+- `POST /api/admin/products` - Add new product
+- `PUT /api/admin/products/:id` - Update product
+- `DELETE /api/admin/products/:id` - Delete product
 
 ## 🚀 Deployment
 
