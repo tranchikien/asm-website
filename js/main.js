@@ -1069,4 +1069,34 @@ const oldUpdateCartItemQuantity = typeof updateCartItemQuantity === 'function' ?
 window.updateCartItemQuantity = function() {
     if (oldUpdateCartItemQuantity) oldUpdateCartItemQuantity.apply(this, arguments);
     renderCartDropdown();
-}; 
+};
+
+// Thêm function để mở Admin Panel
+function openAdminPanel() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.isAdmin) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    const adminPanelModal = new bootstrap.Modal(document.getElementById('adminPanelModal'));
+    adminPanelModal.show();
+    loadAdminDashboard(); // Load dữ liệu dashboard
+}
+
+// Thêm function kiểm tra và hiển thị Admin Menu khi load page
+function checkAndShowAdminMenu() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const adminMenu = document.getElementById('admin-menu');
+    
+    if (user && user.isAdmin && adminMenu) {
+        adminMenu.style.display = 'block';
+    } else if (adminMenu) {
+        adminMenu.style.display = 'none';
+    }
+}
+
+// Thêm vào initialization code
+document.addEventListener('DOMContentLoaded', () => {
+    checkAndShowAdminMenu();
+});
