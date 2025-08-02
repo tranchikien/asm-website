@@ -877,3 +877,22 @@ async function deleteAdminUser(userId) {
     }
 }
 
+// ===== FORM EVENT LISTENERS =====
+
+document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleLogin();
+});
+
+document.getElementById('registerForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    handleRegister();
+});
+
+// ===== INITIALIZATION =====
+
+// Check login status when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateUserDropdown();
+});
+
