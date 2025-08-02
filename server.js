@@ -283,6 +283,17 @@ app.post('/api/auth/login', async (req, res) => {
             isAdmin: user.isAdmin
         };
         
+        console.log('🔐 Login Response User Object:', {
+            originalUser: {
+                _id: user._id,
+                email: user.email,
+                isAdmin: user.isAdmin,
+                isAdminType: typeof user.isAdmin
+            },
+            responseUser: userResponse,
+            finalResponse: JSON.stringify(userResponse)
+        });
+        
         res.json({
             message: 'Login successful',
             token,
