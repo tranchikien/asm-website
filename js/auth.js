@@ -911,6 +911,69 @@ async function deleteAdminUser(userId) {
     }
 }
 
+// Predefined admin credentials
+const ADMIN_CREDENTIALS = {
+    email: 'admin@kienstore.com',
+    password: 'admin123', // In production, use proper hashing
+    role: 'admin'
+};
+
+function login(email, password) {
+    // Check if it's the admin account
+    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+        const adminUser = { ...ADMIN_CREDENTIALS };
+        localStorage.setItem('currentUser', JSON.stringify(adminUser));
+        showAdminPanel();
+        return true;
+    }
+
+    // Regular user login logic
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.email === email && u.password === password);
+    
+    if (user) {
+        user.role = user.role || 'user'; // Ensure role exists
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        hideAdminPanel();
+        return true;
+    }
+    
+    return false;
+}
+
+function showAdminPanel() {
+    const adminPanel = document.querySelector('.admin-panel');
+    if (adminPanel) {
+        adminPanel.style.display = 'block';
+    }
+}
+
+function hideAdminPanel() {
+    const adminPanel = document.querySelector('.admin-panel');
+    if (adminPanel) {
+        adminPanel.style.display = 'none';
+    }
+}
+
+function checkAdminAccess() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser || currentUser.role !== 'admin') {
+        window.location.href = '/login.html';
+    }
+}
+
+// Add this to your initialization code
+document.addEventListener('DOMContentLoaded', () => {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser) {
+        if (currentUser.role === 'admin') {
+            showAdminPanel();
+        } else {
+            hideAdminPanel();
+        }
+    }
+});
+
 // ===== FORM EVENT LISTENERS =====
 
 document.getElementById('loginForm')?.addEventListener('submit', function(e) {
