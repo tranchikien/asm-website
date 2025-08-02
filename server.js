@@ -20,7 +20,7 @@ app.use(express.json());
 app.use(express.static('.')); // Serve static files
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/test?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 console.log('🔗 Attempting to connect to MongoDB...');
 console.log('📋 Environment variables:');
