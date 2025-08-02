@@ -8,7 +8,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chi
 // Import User Model
 const User = require('./models/User');
 
-async function resetAdminPassword() {
+async function fixAdminUser() {
     try {
         // Connect to MongoDB
         await mongoose.connect(MONGODB_URI, {
@@ -41,25 +41,37 @@ async function resetAdminPassword() {
             await newAdminUser.save();
             console.log('✅ New admin user created successfully!');
         } else {
-            console.log('✅ Admin user found! Resetting password...');
+            console.log('✅ Admin user found! Checking isAdmin field...');
+            console.log('Current admin user:', {
+                email: adminUser.email,
+                isAdmin: adminUser.isAdmin,
+                isAdminType: typeof adminUser.isAdmin,
+                hasIsAdmin: 'isAdmin' in adminUser
+            });
             
-            // Hash new password
-            const hashedPassword = await bcrypt.hash('admin123', 10);
-            
-            // Update password and ensure isAdmin is true
-            adminUser.password = hashedPassword;
-            adminUser.isAdmin = true;
-            
-            await adminUser.save();
-            console.log('✅ Admin password reset successfully!');
+            // Check if isAdmin field exists and is true
+            if (!adminUser.isAdmin) {
+                console.log('⚠️ isAdmin field is false or missing. Setting to true...');
+                adminUser.isAdmin = true;
+                await adminUser.save();
+                console.log('✅ isAdmin field updated to true');
+            } else {
+                console.log('✅ isAdmin field is already true');
+            }
         }
 
-        console.log('📧 Email: admin@asm.com');
-        console.log('🔑 Password: admin123');
-        console.log('👑 isAdmin: true');
+        // Verify the final state
+        const finalUser = await User.findOne({ email: 'admin@asm.com' });
+        console.log('🔍 Final admin user state:', {
+            email: finalUser.email,
+            isAdmin: finalUser.isAdmin,
+            isAdminType: typeof finalUser.isAdmin,
+            hasIsAdmin: 'isAdmin' in finalUser,
+            fullObject: finalUser.toObject()
+        });
 
     } catch (error) {
-        console.error('❌ Error resetting admin password:', error);
+        console.error('❌ Error fixing admin user:', error);
     } finally {
         await mongoose.connection.close();
         console.log('🔌 MongoDB connection closed');
@@ -67,4 +79,4 @@ async function resetAdminPassword() {
 }
 
 // Run the script
-resetAdminPassword(); 
+fixAdminUser(); 

@@ -249,6 +249,15 @@ app.post('/api/auth/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Debug: Check if isAdmin field exists in user object
+        console.log('🔍 User object debug:', {
+            hasIsAdmin: 'isAdmin' in user,
+            isAdminValue: user.isAdmin,
+            isAdminType: typeof user.isAdmin,
+            userKeys: Object.keys(user.toObject()),
+            userSchema: user.schema.obj
+        });
+        
         const userResponse = {
             id: user._id,
             email: user.email,
