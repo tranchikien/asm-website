@@ -24,13 +24,13 @@ async function createAdminUser() {
         if (existingAdmin) {
             console.log('⚠️ Admin user already exists!');
             console.log('Email: admin@asm.com');
-            console.log('Password: admin123');
+            console.log('Password: Admin123@');
             console.log('IsAdmin:', existingAdmin.isAdmin);
             return;
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const hashedPassword = await bcrypt.hash('Admin123@', 10);
 
         // Create admin user
         const adminUser = new User({
@@ -47,7 +47,7 @@ async function createAdminUser() {
 
         console.log('✅ Admin user created successfully!');
         console.log('📧 Email: admin@asm.com');
-        console.log('🔑 Password: admin123');
+        console.log('🔑 Password: Admin123@');
         console.log('👑 IsAdmin: true');
 
     } catch (error) {
