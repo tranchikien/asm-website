@@ -298,6 +298,9 @@ function updateUserDropdown() {
         // Update user name in dropdown
         const userNameEl = document.getElementById('user-name');
         if (userNameEl) userNameEl.textContent = user.fullname;
+        
+        // Update admin menu
+        updateAdminMenu();
     } else {
         // User is not logged in - show login/register, hide user dropdown
         if (loginBtn) loginBtn.style.display = 'inline-block';
@@ -400,5 +403,477 @@ function cleanupSessionData() {
     }
     
     updateUserDropdown();
+}
+
+// ===== ADMIN FUNCTIONS =====
+
+/**
+ * Check if current user is admin
+ */
+function isAdmin() {
+    const user = getCurrentUser();
+    const token = localStorage.getItem('authToken');
+    
+    if (!user || !token) {
+        return false;
+    }
+    
+    return user.isAdmin === true;
+}
+
+/**
+ * Update admin menu visibility
+ */
+function updateAdminMenu() {
+    const adminMenu = document.getElementById('admin-menu');
+    const isAdminUser = isAdmin();
+    
+    if (adminMenu) {
+        adminMenu.style.display = isAdminUser ? 'block' : 'none';
+    }
+}
+
+/**
+ * Open admin panel modal
+ */
+async function openAdminPanel() {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('adminPanelModal'));
+    modal.show();
+    
+    // Load admin data
+    loadAdminData();
+}
+
+/**
+ * Load admin dashboard data
+ */
+async function loadAdminData() {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/stats`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            updateAdminStats(data);
+            updateRecentOrders(data.recentOrders || []);
+        } else {
+            showToast('Failed to load admin data', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading admin data:', error);
+        showToast('Error loading admin data', 'error');
+    }
+}
+
+/**
+ * Update admin statistics
+ */
+function updateAdminStats(stats) {
+    document.getElementById('admin-total-users').textContent = stats.totalUsers || 0;
+    document.getElementById('admin-total-products').textContent = stats.totalProducts || 0;
+    document.getElementById('admin-total-orders').textContent = stats.totalOrders || 0;
+    document.getElementById('admin-total-revenue').textContent = `${stats.totalRevenue || 0} VNĐ`;
+}
+
+/**
+ * Update recent orders table
+ */
+function updateRecentOrders(orders) {
+    const tbody = document.getElementById('admin-recent-orders');
+    tbody.innerHTML = '';
+    
+    orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order._id.slice(-8)}</td>
+            <td>${order.userId?.fullname || 'N/A'}</td>
+            <td>${order.items.length} items</td>
+            <td>${order.totalAmount} VNĐ</td>
+            <td><span class="badge bg-${order.status === 'completed' ? 'success' : order.status === 'pending' ? 'warning' : 'secondary'}">${order.status}</span></td>
+            <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Show admin products section
+ */
+function showAdminProducts() {
+    switchAdminSection('products');
+    loadAdminProducts();
+}
+
+/**
+ * Show admin orders section
+ */
+function showAdminOrders() {
+    switchAdminSection('orders');
+    loadAdminOrders();
+}
+
+/**
+ * Show admin users section
+ */
+function showAdminUsers() {
+    switchAdminSection('users');
+    loadAdminUsers();
+}
+
+/**
+ * Switch admin section
+ */
+function switchAdminSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.tab-pane').forEach(section => {
+        section.classList.remove('show', 'active');
+    });
+    
+    // Show selected section
+    const selectedSection = document.getElementById(sectionId);
+    if (selectedSection) {
+        selectedSection.classList.add('show', 'active');
+    }
+    
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    const activeNavLink = document.querySelector(`[data-bs-target="#${sectionId}"]`);
+    if (activeNavLink) {
+        activeNavLink.classList.add('active');
+    }
+}
+
+/**
+ * Load admin products
+ */
+async function loadAdminProducts() {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/products`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const products = await response.json();
+            displayAdminProducts(products);
+        } else {
+            showToast('Failed to load products', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+        showToast('Error loading products', 'error');
+    }
+}
+
+/**
+ * Display admin products
+ */
+function displayAdminProducts(products) {
+    const tbody = document.getElementById('admin-products-table');
+    tbody.innerHTML = '';
+    
+    products.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>${product.platform}</td>
+            <td>${product.price} VNĐ</td>
+            <td>${product.isSale ? `${product.salePercentage}%` : 'No'}</td>
+            <td>
+                <button class="btn btn-warning btn-sm me-1" onclick="editProduct('${product._id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteAdminProduct('${product._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Load admin orders
+ */
+async function loadAdminOrders() {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/orders`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const orders = await response.json();
+            displayAdminOrders(orders);
+        } else {
+            showToast('Failed to load orders', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        showToast('Error loading orders', 'error');
+    }
+}
+
+/**
+ * Display admin orders
+ */
+function displayAdminOrders(orders) {
+    const tbody = document.getElementById('admin-orders-table');
+    tbody.innerHTML = '';
+    
+    orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${order._id.slice(-8)}</td>
+            <td>${order.userId?.fullname || 'N/A'}</td>
+            <td>${order.items.length} items</td>
+            <td>${order.totalAmount} VNĐ</td>
+            <td>
+                <select class="form-select form-select-sm" onchange="updateAdminOrderStatus('${order._id}', this.value)">
+                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                    <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+            </td>
+            <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteAdminOrder('${order._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Load admin users
+ */
+async function loadAdminUsers() {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const users = await response.json();
+            displayAdminUsers(users);
+        } else {
+            showToast('Failed to load users', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showToast('Error loading users', 'error');
+    }
+}
+
+/**
+ * Display admin users
+ */
+function displayAdminUsers(users) {
+    const tbody = document.getElementById('admin-users-table');
+    tbody.innerHTML = '';
+    
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user.fullname || 'N/A'}</td>
+            <td>${user.email}</td>
+            <td>${user.phone || 'N/A'}</td>
+            <td>${user.location || 'N/A'}</td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteAdminUser('${user._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+/**
+ * Show add product modal
+ */
+function showAddProductModal() {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    document.getElementById('addProductForm').reset();
+    const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
+    modal.show();
+}
+
+/**
+ * Delete admin product
+ */
+async function deleteAdminProduct(productId) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            showToast('Product deleted successfully', 'success');
+            loadAdminProducts();
+        } else {
+            showToast('Failed to delete product', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        showToast('Error deleting product', 'error');
+    }
+}
+
+/**
+ * Update admin order status
+ */
+async function updateAdminOrderStatus(orderId, status) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+        
+        if (response.ok) {
+            showToast('Order status updated successfully', 'success');
+            loadAdminOrders();
+        } else {
+            showToast('Failed to update order status', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showToast('Error updating order status', 'error');
+    }
+}
+
+/**
+ * Delete admin order
+ */
+async function deleteAdminOrder(orderId) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this order?')) return;
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/orders/${orderId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            showToast('Order deleted successfully', 'success');
+            loadAdminOrders();
+        } else {
+            showToast('Failed to delete order', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        showToast('Error deleting order', 'error');
+    }
+}
+
+/**
+ * Delete admin user
+ */
+async function deleteAdminUser(userId) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            showToast('User deleted successfully', 'success');
+            loadAdminUsers();
+        } else {
+            showToast('Failed to delete user', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showToast('Error deleting user', 'error');
+    }
 }
 

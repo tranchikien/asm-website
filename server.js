@@ -4,6 +4,29 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
+// Admin middleware
+const authenticateAdmin = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Access token required' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key', (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid token' });
+        }
+        
+        if (!user.isAdmin) {
+            return res.status(403).json({ message: 'Admin access required' });
+        }
+        
+        req.user = user;
+        next();
+    });
+};
+
 require('dotenv').config();
 
 const app = express();
@@ -256,7 +279,8 @@ app.post('/api/auth/login', async (req, res) => {
             phone: user.phone,
             address: user.address,
             birthday: user.birthday,
-            location: user.location
+            location: user.location,
+            isAdmin: user.isAdmin
         };
         
         res.json({
@@ -646,8 +670,174 @@ app.put('/api/admin/orders/:id/status', authenticateToken, async (req, res) => {
     }
 });
 
-// Admin routes
-app.use('/api/admin', adminRoutes);
+// Admin: Get all users
+app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await User.find({}, '-password').sort({ createdAt: -1 });
+        res.json(users);
+    } catch (error) {
+        console.error('Get all users error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Delete user
+app.delete('/api/admin/users/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Get dashboard stats
+app.get('/api/admin/dashboard/stats', authenticateAdmin, async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments();
+        const totalProducts = await Product.countDocuments();
+        const totalOrders = await Order.countDocuments();
+        
+        const orders = await Order.find().populate('userId');
+        const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+        
+        const recentOrders = await Order.find()
+            .populate('userId', 'fullname email')
+            .sort({ createdAt: -1 })
+            .limit(5);
+        
+        res.json({
+            totalUsers,
+            totalProducts,
+            totalOrders,
+            totalRevenue,
+            recentOrders
+        });
+    } catch (error) {
+        console.error('Get dashboard stats error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Create product
+app.post('/api/admin/products', authenticateAdmin, async (req, res) => {
+    try {
+        const product = new Product(req.body);
+        await product.save();
+        res.status(201).json(product);
+    } catch (error) {
+        console.error('Create product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Update product
+app.put('/api/admin/products/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        res.json(product);
+    } catch (error) {
+        console.error('Update product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Delete product
+app.delete('/api/admin/products/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const product = await Product.findByIdAndDelete(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Delete product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Get all products with filters
+app.get('/api/admin/products', authenticateAdmin, async (req, res) => {
+    try {
+        const { category, platform, search, sort = 'name-asc' } = req.query;
+        
+        let query = {};
+        
+        if (category) {
+            query.category = category;
+        }
+        
+        if (platform) {
+            query.platform = platform;
+        }
+        
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        let products = await Product.find(query);
+        
+        // Sort products
+        if (sort === 'name-asc') {
+            products = products.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sort === 'name-desc') {
+            products = products.sort((a, b) => b.name.localeCompare(a.name));
+        } else if (sort === 'price-asc') {
+            products = products.sort((a, b) => a.price - b.price);
+        } else if (sort === 'price-desc') {
+            products = products.sort((a, b) => b.price - a.price);
+        }
+        
+        res.json(products);
+    } catch (error) {
+        console.error('Get all products error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Get all orders with filters
+app.get('/api/admin/orders', authenticateAdmin, async (req, res) => {
+    try {
+        const { status, userId, sort = 'date-desc' } = req.query;
+        
+        let query = {};
+        
+        if (status) {
+            query.status = status;
+        }
+        
+        if (userId) {
+            query.userId = userId;
+        }
+        
+        let orders = await Order.find(query)
+            .populate('items.productId')
+            .populate('userId', '-password')
+            .sort({ createdAt: -1 });
+            
+        // Sort orders
+        if (sort === 'date-asc') {
+            orders = orders.sort((a, b) => a.createdAt - b.createdAt);
+        } else if (sort === 'amount-desc') {
+            orders = orders.sort((a, b) => b.totalAmount - a.totalAmount);
+        }
+        
+        res.json(orders);
+    } catch (error) {
+        console.error('Get all orders error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 // Serve frontend
 app.get('/', (req, res) => {
