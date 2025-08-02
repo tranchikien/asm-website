@@ -255,7 +255,9 @@ app.post('/api/auth/login', async (req, res) => {
             isAdminValue: user.isAdmin,
             isAdminType: typeof user.isAdmin,
             userKeys: Object.keys(user.toObject()),
-            userSchema: user.schema.obj
+            userSchema: user.schema.obj,
+            userDoc: user._doc,
+            userToObject: user.toObject()
         });
         
         const userResponse = {
