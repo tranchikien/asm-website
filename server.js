@@ -3,7 +3,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const adminRoutes = require('./admin');
+
 require('dotenv').config();
 
 const app = express();
@@ -249,17 +249,6 @@ app.post('/api/auth/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // Debug: Check if isAdmin field exists in user object
-        console.log('🔍 User object debug:', {
-            hasIsAdmin: 'isAdmin' in user,
-            isAdminValue: user.isAdmin,
-            isAdminType: typeof user.isAdmin,
-            userKeys: Object.keys(user.toObject()),
-            userSchema: user.schema.obj,
-            userDoc: user._doc,
-            userToObject: user.toObject()
-        });
-        
         const userResponse = {
             id: user._id,
             email: user.email,
@@ -267,21 +256,8 @@ app.post('/api/auth/login', async (req, res) => {
             phone: user.phone,
             address: user.address,
             birthday: user.birthday,
-            location: user.location,
-            isAdmin: user.isAdmin
+            location: user.location
         };
-        
-        console.log('🔐 Login Response User Object:', {
-            originalUser: {
-                _id: user._id,
-                email: user.email,
-                isAdmin: user.isAdmin,
-                isAdminType: typeof user.isAdmin,
-                fullObject: user.toObject()
-            },
-            responseUser: userResponse,
-            finalResponse: JSON.stringify(userResponse)
-        });
         
         res.json({
             message: 'Login successful',

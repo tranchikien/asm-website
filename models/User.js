@@ -8,7 +8,6 @@ const userSchema = new mongoose.Schema({
     address: String,
     birthday: Date,
     location: String,
-    isAdmin: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
