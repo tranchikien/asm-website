@@ -117,6 +117,9 @@ function handleLogin() {
             
             console.log('🔐 Login Response:', {
                 user: user,
+                hasIsAdmin: 'isAdmin' in user,
+                isAdminValue: user.isAdmin,
+                isAdminType: typeof user.isAdmin,
                 token: token ? 'Present' : 'Missing'
             });
             
@@ -133,6 +136,12 @@ function handleLogin() {
             
             // Update UI immediately
             updateUserDropdown();
+            
+            // Force update admin menu with delay to ensure DOM is ready
+            setTimeout(() => {
+                console.log('🔄 Forcing admin menu update after login...');
+                updateAdminMenu();
+            }, 100);
             
             // Update profile page
             const profileUsername = document.getElementById('profile-username');
@@ -415,10 +424,21 @@ function isAdmin() {
     const token = localStorage.getItem('authToken');
     
     if (!user || !token) {
+        console.log('🔍 Admin Check: No user or token');
         return false;
     }
     
-    return user.isAdmin === true;
+    const isAdminUser = user.isAdmin === true;
+    
+    console.log('🔍 Admin Check:', {
+        user: user.email,
+        isAdmin: isAdminUser,
+        hasToken: !!token,
+        userIsAdminField: user.isAdmin,
+        userIsAdminType: typeof user.isAdmin
+    });
+    
+    return isAdminUser;
 }
 
 /**
@@ -428,8 +448,22 @@ function updateAdminMenu() {
     const adminMenu = document.getElementById('admin-menu');
     const isAdminUser = isAdmin();
     
+    console.log('🔧 Update Admin Menu:', {
+        adminMenu: adminMenu ? 'Found' : 'Not found',
+        isAdmin: isAdminUser,
+        display: isAdminUser ? 'block' : 'none'
+    });
+    
     if (adminMenu) {
-        adminMenu.style.display = isAdminUser ? 'block' : 'none';
+        if (isAdminUser) {
+            adminMenu.style.display = 'block';
+            console.log('✅ Admin menu should be visible');
+        } else {
+            adminMenu.style.display = 'none';
+            console.log('❌ Admin menu should be hidden');
+        }
+    } else {
+        console.log('❌ Admin menu element not found');
     }
 }
 
