@@ -1,6 +1,21 @@
 // ===== UTILITY FUNCTIONS =====
 
 /**
+ * Get registered users from localStorage
+ */
+function getRegisteredUsers() {
+    const users = localStorage.getItem('registered_users');
+    if (!users) return [];
+    
+    try {
+        return JSON.parse(users);
+    } catch (error) {
+        console.error('Error parsing registered users:', error);
+        return [];
+    }
+}
+
+/**
  * Switch between modals
  */
 function switchModal(fromModalId, toModalId) {
@@ -185,12 +200,16 @@ function showToast(message, type = 'info') {
  * Show Profile Page (mở modal thay vì section)
  */
 function showProfilePage() {
+    console.log('🔍 showProfilePage() called');
+    
     try {
         const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
         if (loginModal) loginModal.hide();
         const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
         if (registerModal) registerModal.hide();
-    } catch {}
+    } catch (error) {
+        console.log('No modals to hide:', error);
+    }
     
     // Lấy user từ localStorage['user']
     const user = getCurrentUser();
@@ -271,12 +290,19 @@ function showProfilePage() {
     
     // Mở modal profile
     try {
-        const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
-        profileModal.show();
-        console.log('✅ Profile modal opened successfully');
+        const profileModal = document.getElementById('profileModal');
+        if (profileModal) {
+            console.log('✅ Profile modal element found');
+            const bootstrapModal = new bootstrap.Modal(profileModal);
+            bootstrapModal.show();
+            console.log('✅ Profile modal opened successfully');
+        } else {
+            console.error('❌ Profile modal element not found');
+            showToast('Profile modal not found', 'error');
+        }
     } catch (error) {
         console.error('❌ Error opening profile modal:', error);
-        showToast('Error opening profile page', 'error');
+        showToast('Error opening profile page: ' + error.message, 'error');
     }
 }
 
@@ -295,17 +321,33 @@ function showContactPage() {
  * Show Cart Page
  */
 function showCartPage() {
-    hideAllPages();
-    // Ẩn modal giỏ hàng nếu đang mở
+    console.log('🔍 showCartPage() called');
+    
     try {
-        const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-        if (cartModal) cartModal.hide();
-    } catch {}
-    document.getElementById('cart-page').style.display = 'block';
-    updateCartPage();
-    updateBreadcrumbForPage('Shopping Cart');
-    scrollToTop();
-    showToast('Đã mở trang giỏ hàng', 'info');
+        hideAllPages();
+        // Ẩn modal giỏ hàng nếu đang mở
+        try {
+            const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+            if (cartModal) cartModal.hide();
+        } catch (error) {
+            console.log('No cart modal to hide:', error);
+        }
+        
+        const cartPage = document.getElementById('cart-page');
+        if (cartPage) {
+            cartPage.style.display = 'block';
+            console.log('✅ Cart page shown');
+            updateCartPage();
+            updateBreadcrumbForPage('Shopping Cart');
+            scrollToTop();
+        } else {
+            console.error('❌ Cart page element not found');
+            showToast('Cart page not found', 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error showing cart page:', error);
+        showToast('Error showing cart page: ' + error.message, 'error');
+    }
 }
 
 /**
@@ -341,6 +383,8 @@ function showHomePage() {
  * Hide all pages
  */
 function hideAllPages() {
+    console.log('🔍 hideAllPages() called');
+    
     const pages = [
         'home', 'all-games', 'filtered-games-section', 'featured-games',
         'profile-page', 'contact-page', 'cart-page', 'product-detail-page',
@@ -351,6 +395,9 @@ function hideAllPages() {
         const page = document.getElementById(pageId);
         if (page) {
             page.style.display = 'none';
+            console.log(`✅ Hidden page: ${pageId}`);
+        } else {
+            console.log(`⚠️ Page not found: ${pageId}`);
         }
     });
 }
@@ -1052,11 +1099,25 @@ function removeFromWishlist(gameId) {
  * Show wishlist page
  */
 function showWishlist() {
-    hideAllPages();
-    document.getElementById('wishlist-page').style.display = 'block';
-    renderWishlist();
-    updateBreadcrumbForPage('Wishlist');
-    scrollToTop();
+    console.log('🔍 showWishlist() called');
+    
+    try {
+        hideAllPages();
+        const wishlistPage = document.getElementById('wishlist-page');
+        if (wishlistPage) {
+            wishlistPage.style.display = 'block';
+            console.log('✅ Wishlist page shown');
+            renderWishlist();
+            updateBreadcrumbForPage('Wishlist');
+            scrollToTop();
+        } else {
+            console.error('❌ Wishlist page element not found');
+            showToast('Wishlist page not found', 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error showing wishlist:', error);
+        showToast('Error showing wishlist: ' + error.message, 'error');
+    }
 }
 
 /**
@@ -1124,11 +1185,25 @@ function updateWishlistCount() {
  * Show order history page
  */
 function showOrderHistory() {
-    hideAllPages();
-    document.getElementById('order-history-page').style.display = 'block';
-    renderOrderHistory();
-    updateBreadcrumbForPage('Order History');
-    scrollToTop();
+    console.log('🔍 showOrderHistory() called');
+    
+    try {
+        hideAllPages();
+        const orderHistoryPage = document.getElementById('order-history-page');
+        if (orderHistoryPage) {
+            orderHistoryPage.style.display = 'block';
+            console.log('✅ Order history page shown');
+            renderOrderHistory();
+            updateBreadcrumbForPage('Order History');
+            scrollToTop();
+        } else {
+            console.error('❌ Order history page element not found');
+            showToast('Order history page not found', 'error');
+        }
+    } catch (error) {
+        console.error('❌ Error showing order history:', error);
+        showToast('Error showing order history: ' + error.message, 'error');
+    }
 }
 
 /**
@@ -1551,8 +1626,14 @@ function hideGameCardsSkeleton(containerId) {
 
 // Initialize all new features when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 DOM Content Loaded - Initializing utils.js');
+    
     // Initialize parallax hero banner
-    renderParallaxHeroBanner();
+    try {
+        renderParallaxHeroBanner();
+    } catch (error) {
+        console.error('Error initializing parallax hero banner:', error);
+    }
     
     // Initialize search suggestions
     const searchInput = document.getElementById('searchInput');
@@ -1564,23 +1645,58 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hide suggestions when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-container')) {
-                document.getElementById('searchSuggestions').style.display = 'none';
+                const suggestionsEl = document.getElementById('searchSuggestions');
+                if (suggestionsEl) suggestionsEl.style.display = 'none';
             }
         });
     }
     
     // Initialize back to top button
-    initBackToTop();
+    try {
+        initBackToTop();
+    } catch (error) {
+        console.error('Error initializing back to top button:', error);
+    }
     
     // Update wishlist count
-    updateWishlistCount();
+    try {
+        updateWishlistCount();
+    } catch (error) {
+        console.error('Error updating wishlist count:', error);
+    }
     
     // Initialize product detail page buttons
-    initializeProductDetailButtons();
-    renderHomeBgDecor();
-    renderTodayDeals();
-    renderBestSellers();
-    renderHomeFeedback();
+    try {
+        initializeProductDetailButtons();
+    } catch (error) {
+        console.error('Error initializing product detail buttons:', error);
+    }
+    
+    try {
+        renderHomeBgDecor();
+    } catch (error) {
+        console.error('Error rendering home background decor:', error);
+    }
+    
+    try {
+        renderTodayDeals();
+    } catch (error) {
+        console.error('Error rendering today deals:', error);
+    }
+    
+    try {
+        renderBestSellers();
+    } catch (error) {
+        console.error('Error rendering best sellers:', error);
+    }
+    
+    try {
+        renderHomeFeedback();
+    } catch (error) {
+        console.error('Error rendering home feedback:', error);
+    }
+    
+    console.log('✅ Utils.js initialization completed');
 });
 
 /**
