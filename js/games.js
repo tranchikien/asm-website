@@ -1,11 +1,75 @@
 // ===== GAME FUNCTIONS =====
 
 /**
+ * Get games data from main.js or load from API
+ */
+function getGamesData() {
+    // Try to get from main.js first
+    if (typeof gamesData !== 'undefined' && gamesData && gamesData.length > 0) {
+        console.log('🎮 Using gamesData from main.js:', gamesData.length, 'games');
+        return gamesData;
+    }
+    
+    // Fallback to default games data
+    const defaultGames = [
+        {
+            id: 1,
+            name: "Cyberpunk 2077",
+            description: "An open-world action RPG developed by CD Projekt Red. Set in Night City, a futuristic city full of violence and ambition.",
+            price: 1200000,
+            originalPrice: 1200000,
+            image: "images/cyberpunk-2077-he-lo-su-kien-cro-3340512c-image-578665117.jpg.webp",
+            category: "RPG",
+            platform: "Steam",
+            isFeatured: true,
+            isSale: true,
+            sale: 30,
+            sold: 1200,
+            developer: "CD Projekt Red",
+            publisher: "CD Projekt",
+            releaseDate: "2020-12-10",
+            size: "63 GB",
+            configuration: "Intel Core i5-3570K / AMD FX-8310"
+        },
+        {
+            id: 2,
+            name: "The Witcher 3: Wild Hunt",
+            description: "An action RPG developed by CD Projekt Red. Play as Geralt of Rivia, a monster hunter on an epic journey.",
+            price: 800000,
+            originalPrice: 800000,
+            image: "images/the-witcher-3-the-wild-hunt-review_wvw4.1024.webp",
+            category: "RPG",
+            platform: "Steam",
+            isFeatured: true,
+            isSale: true,
+            sale: 50,
+            sold: 950,
+            developer: "CD Projekt Red",
+            publisher: "CD Projekt",
+            releaseDate: "2015-05-19",
+            size: "50 GB",
+            configuration: "Intel Core i5-2500K / AMD Phenom II X4 940"
+        }
+    ];
+    
+    console.log('🎮 Using default games data:', defaultGames.length, 'games');
+    return defaultGames;
+}
+
+/**
  * Render danh sách game ra grid
  */
-function renderGames(games = gamesData) {
+function renderGames(games = null) {
     const grid = document.getElementById('games-grid');
-    if (!grid) return;
+    if (!grid) {
+        console.log('❌ Games grid element not found');
+        return;
+    }
+    
+    // Get games data if not provided
+    if (!games) {
+        games = getGamesData();
+    }
     
     console.log('🎮 Rendering games:', games);
     
@@ -18,17 +82,32 @@ function renderGames(games = gamesData) {
     games.forEach(game => {
         grid.innerHTML += createGameCard(game);
     });
+    
+    console.log('✅ Games rendered successfully');
 }
 
 /**
  * Hiển thị tất cả game
  */
 function showAllGames() {
+    console.log('🎮 Showing all games...');
     hideAllPages();
-    document.getElementById('all-games').style.display = 'block';
-    console.log('🎮 All Games Data:', gamesData); // Debug log
-    renderGames(gamesData); // Render tất cả game
-    updateBreadcrumb('All Games');
+    
+    const allGamesPage = document.getElementById('all-games');
+    if (allGamesPage) {
+        allGamesPage.style.display = 'block';
+        console.log('✅ All games page displayed');
+        
+        const games = getGamesData();
+        console.log('🎮 All Games Data:', games);
+        renderGames(games);
+        
+        if (typeof updateBreadcrumb === 'function') {
+            updateBreadcrumb('All Games');
+        }
+    } else {
+        console.log('❌ All games page element not found');
+    }
 }
 
 /**
