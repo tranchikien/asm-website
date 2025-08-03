@@ -1091,6 +1091,51 @@ function renderCartDropdown() {
 
 // ===== INITIALIZATION =====
 
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing page...');
+    
+    // Initialize core functions
+    initializePage();
+    
+    // Initialize authentication
+    if (typeof updateUserDropdown === 'function') {
+        updateUserDropdown();
+    }
+    
+    // Initialize admin menu
+    if (typeof updateAdminMenu === 'function') {
+        updateAdminMenu();
+    }
+    
+    // Initialize cart
+    if (typeof loadCartFromStorage === 'function') {
+        loadCartFromStorage();
+    }
+    
+    // Initialize wishlist
+    if (typeof loadWishlist === 'function') {
+        loadWishlist();
+    }
+    
+    // Initialize parallax banner
+    renderParallaxHeroBanner();
+    
+    // Initialize account dropdown
+    updateAccountDropdown();
+    
+    // Initialize cart dropdown
+    const cartDropdownBtn = document.getElementById('cartDropdown');
+    if (cartDropdownBtn) {
+        cartDropdownBtn.addEventListener('click', renderCartDropdown);
+    }
+    
+    // Initialize admin menu check
+    checkAndShowAdminMenu();
+    
+    console.log('✅ Page initialization complete');
+});
+
 // Call this after DOMContentLoaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', renderParallaxHeroBanner);
@@ -1098,24 +1143,15 @@ if (document.readyState === 'loading') {
     renderParallaxHeroBanner();
 }
 
-// Initialize page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializePage();
-    
-    // Force update admin menu after a short delay to ensure DOM is ready
-    setTimeout(() => {
-        if (typeof updateAdminMenu === 'function') {
-            updateAdminMenu();
-        }
-    }, 1000);
-}); 
-
 // Hiển thị dropdown tài khoản khi đăng nhập
 function updateAccountDropdown() {
     const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
     const accountGroup = document.getElementById('account-dropdown-group');
     const loginBtn = document.getElementById('login-btn');
     const registerBtn = document.getElementById('register-btn');
+    
+    console.log('👤 Updating account dropdown:', { user: user ? user.email : 'No user' });
+    
     if (user) {
         if (accountGroup) accountGroup.style.display = '';
         if (loginBtn) loginBtn.style.display = 'none';
@@ -1127,34 +1163,29 @@ function updateAccountDropdown() {
     }
 }
 
-// Gọi sau khi đăng nhập/đăng xuất
-if (typeof updateAccountDropdown === 'function') {
-    document.addEventListener('DOMContentLoaded', updateAccountDropdown);
-}
-
-// Call when cart dropdown is opened
-const cartDropdownBtn = document.getElementById('cartDropdown');
-if (cartDropdownBtn) {
-    cartDropdownBtn.addEventListener('click', renderCartDropdown);
-}
-
 // Ensure cart dropdown is updated when items are added/removed
 const oldAddToCart = typeof addToCart === 'function' ? addToCart : null;
 window.addToCart = function() {
     if (oldAddToCart) oldAddToCart.apply(this, arguments);
-    renderCartDropdown();
+    if (typeof renderCartDropdown === 'function') {
+        renderCartDropdown();
+    }
 };
 
 const oldRemoveFromCart = typeof removeFromCart === 'function' ? removeFromCart : null;
 window.removeFromCart = function() {
     if (oldRemoveFromCart) oldRemoveFromCart.apply(this, arguments);
-    renderCartDropdown();
+    if (typeof renderCartDropdown === 'function') {
+        renderCartDropdown();
+    }
 };
 
 const oldUpdateCartItemQuantity = typeof updateCartItemQuantity === 'function' ? updateCartItemQuantity : null;
 window.updateCartItemQuantity = function() {
     if (oldUpdateCartItemQuantity) oldUpdateCartItemQuantity.apply(this, arguments);
-    renderCartDropdown();
+    if (typeof renderCartDropdown === 'function') {
+        renderCartDropdown();
+    }
 };
 
 // Thêm function để mở Admin Panel
@@ -1167,7 +1198,11 @@ function openAdminPanel() {
     
     const adminPanelModal = new bootstrap.Modal(document.getElementById('adminPanelModal'));
     adminPanelModal.show();
-    loadAdminDashboard(); // Load dữ liệu dashboard
+    
+    // Load admin dashboard data
+    if (typeof loadAdminData === 'function') {
+        loadAdminData();
+    }
 }
 
 // Thêm function kiểm tra và hiển thị Admin Menu khi load page
@@ -1175,14 +1210,17 @@ function checkAndShowAdminMenu() {
     const user = JSON.parse(localStorage.getItem('user'));
     const adminMenu = document.getElementById('admin-menu');
     
+    console.log('🔍 Checking admin menu:', { 
+        user: user ? user.email : 'No user',
+        isAdmin: user ? user.isAdmin : false,
+        adminMenuFound: !!adminMenu 
+    });
+    
     if (user && user.isAdmin && adminMenu) {
         adminMenu.style.display = 'block';
+        console.log('✅ Admin menu displayed');
     } else if (adminMenu) {
         adminMenu.style.display = 'none';
+        console.log('❌ Admin menu hidden');
     }
 }
-
-// Thêm vào initialization code
-document.addEventListener('DOMContentLoaded', () => {
-    checkAndShowAdminMenu();
-});
