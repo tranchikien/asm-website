@@ -14,6 +14,8 @@ const API_BASE_URL = (() => {
     return 'https://asm-website-production.up.railway.app';
 })();
 
+console.log('🌐 API Base URL:', API_BASE_URL);
+
 // API Endpoints
 const API_ENDPOINTS = {
     // Auth endpoints
@@ -68,12 +70,13 @@ async function apiCall(endpoint, options = {}) {
         const response = await fetch(url, defaultOptions);
         console.log('📥 Response status:', response.status);
         
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         console.log('📥 Response data:', data);
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'API call failed');
-        }
         
         return data;
     } catch (error) {
