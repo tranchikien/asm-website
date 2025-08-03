@@ -141,6 +141,7 @@ function handleLogin() {
             setTimeout(() => {
                 console.log('🔄 Forcing admin menu update after login...');
                 updateAdminMenu();
+                checkAdminStatus();
             }, 100);
 
             // Update profile page
@@ -447,11 +448,17 @@ function isAdmin() {
 function updateAdminMenu() {
     const adminMenu = document.getElementById('admin-menu');
     const isAdminUser = isAdmin();
+    const user = getCurrentUser();
 
     console.log('🔧 Update Admin Menu:', {
         adminMenu: adminMenu ? 'Found' : 'Not found',
         isAdmin: isAdminUser,
-        display: isAdminUser ? 'block' : 'none'
+        display: isAdminUser ? 'block' : 'none',
+        user: user ? {
+            email: user.email,
+            isAdmin: user.isAdmin,
+            isAdminType: typeof user.isAdmin
+        } : 'No user'
     });
 
     if (adminMenu) {
@@ -911,60 +918,23 @@ async function deleteAdminUser(userId) {
     }
 }
 
-// Predefined admin credentials
-const ADMIN_CREDENTIALS = {
-    email: 'admin@kienstore.com',
-    password: 'admin123', // In production, use proper hashing
-    role: 'admin'
-};
-
-async function login(email, password) {
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Lưu token và thông tin user
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-
-            // Kiểm tra và hiển thị Admin Panel nếu là admin
-            if (data.user.isAdmin) {
-                document.getElementById('admin-menu').style.display = 'block';
-            } else {
-                document.getElementById('admin-menu').style.display = 'none';
-            }
-
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error('Login error:', error);
-        return false;
-    }
-}
-
 // Thêm function kiểm tra quyền admin
 function checkAdminStatus() {
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = getCurrentUser();
     if (user && user.isAdmin) {
-        document.getElementById('admin-menu').style.display = 'block';
+        const adminMenu = document.getElementById('admin-menu');
+        if (adminMenu) {
+            adminMenu.style.display = 'block';
+            console.log('✅ Admin menu displayed for admin user');
+        }
     } else {
-        document.getElementById('admin-menu').style.display = 'none';
+        const adminMenu = document.getElementById('admin-menu');
+        if (adminMenu) {
+            adminMenu.style.display = 'none';
+            console.log('❌ Admin menu hidden for non-admin user');
+        }
     }
 }
-
-// Thêm function này vào document ready
-document.addEventListener('DOMContentLoaded', () => {
-    checkAdminStatus();
-});
 
 // ===== FORM EVENT LISTENERS =====
 
