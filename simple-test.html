@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test - ASM Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .result.success {
+            border-left-color: #28a745;
+        }
+        .result.error {
+            border-left-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple Test - ASM Website Functions</h1>
+    
+    <div class="test-section">
+        <h2>🔐 Authentication Test</h2>
+        <button class="test-button" onclick="testAuth()">Test Authentication Functions</button>
+        <div id="auth-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎮 Games Test</h2>
+        <button class="test-button" onclick="testGames()">Test Games Functions</button>
+        <div id="games-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🛒 Cart Test</h2>
+        <button class="test-button" onclick="testCart()">Test Cart Functions</button>
+        <div id="cart-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>👤 Profile Test</h2>
+        <button class="test-button" onclick="testProfile()">Test Profile Functions</button>
+        <div id="profile-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>❤️ Wishlist Test</h2>
+        <button class="test-button" onclick="testWishlist()">Test Wishlist Functions</button>
+        <div id="wishlist-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📦 Order Test</h2>
+        <button class="test-button" onclick="testOrder()">Test Order Functions</button>
+        <div id="order-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Utility Test</h2>
+        <button class="test-button" onclick="testUtility()">Test Utility Functions</button>
+        <div id="utility-result"></div>
+    </div>
+
+    <script>
+        function testAuth() {
+            const result = document.getElementById('auth-result');
+            try {
+                if (typeof isLoggedIn === 'function') {
+                    result.innerHTML = '<div class="result success">✅ isLoggedIn function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ isLoggedIn function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testGames() {
+            const result = document.getElementById('games-result');
+            try {
+                if (typeof showAllGames === 'function') {
+                    result.innerHTML = '<div class="result success">✅ showAllGames function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showAllGames function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testCart() {
+            const result = document.getElementById('cart-result');
+            try {
+                if (typeof addToCart === 'function') {
+                    result.innerHTML = '<div class="result success">✅ addToCart function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ addToCart function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testProfile() {
+            const result = document.getElementById('profile-result');
+            try {
+                if (typeof showProfilePage === 'function') {
+                    result.innerHTML = '<div class="result success">✅ showProfilePage function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showProfilePage function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testWishlist() {
+            const result = document.getElementById('wishlist-result');
+            try {
+                if (typeof showWishlist === 'function') {
+                    result.innerHTML = '<div class="result success">✅ showWishlist function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showWishlist function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testOrder() {
+            const result = document.getElementById('order-result');
+            try {
+                if (typeof showOrderHistory === 'function') {
+                    result.innerHTML = '<div class="result success">✅ showOrderHistory function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showOrderHistory function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testUtility() {
+            const result = document.getElementById('utility-result');
+            try {
+                if (typeof hideAllPages === 'function') {
+                    result.innerHTML = '<div class="result success">✅ hideAllPages function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ hideAllPages function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html> 
