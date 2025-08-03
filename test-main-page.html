@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Main Page Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #1a1a1a; color: white; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 5px; }
+        .debug-info { background: #2a2a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .btn { margin: 5px; }
+        .navbar { background: #333 !important; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">KIENSTORE</a>
+            
+            <div class="d-flex align-items-center">
+                <!-- Login/Register Buttons -->
+                <button id="login-btn" class="btn btn-outline-light me-2" onclick="openLoginModal()">Login</button>
+                <button id="register-btn" class="btn btn-orange me-2" onclick="openRegisterModal()">Register</button>
+                
+                <!-- User Dropdown (hidden by default) -->
+                <div id="user-dropdown" class="dropdown" style="display:none;">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i><span id="user-name">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">
+                            <i class="fas fa-user me-2"></i>Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="fas fa-heart me-2"></i>Wishlist
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="fas fa-box me-2"></i>Orders
+                        </a></li>
+                        
+                        <!-- Admin Menu (only visible for admin users) -->
+                        <li id="admin-menu" style="display:none;">
+                            <hr class="dropdown-divider">
+                            <a class="dropdown-item text-warning" href="#" onclick="openAdminPanel()">
+                                <i class="fas fa-crown me-2"></i>Admin Panel
+                            </a>
+                        </li>
+                        
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 100px;">
+        <h1><i class="fas fa-crown text-warning"></i> Test Main Page Admin Panel</h1>
+        
+        <!-- Login Section -->
+        <div class="test-section">
+            <h3>🔐 Login Test</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="email" id="loginEmail" class="form-control mb-2" placeholder="Email" value="admin@asm.com">
+                    <input type="password" id="loginPassword" class="form-control mb-2" placeholder="Password" value="admin123">
+                    <button class="btn btn-primary" onclick="handleLogin()">Login</button>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Info -->
+        <div class="test-section">
+            <h3>🔍 Debug Information</h3>
+            <button class="btn btn-info" onclick="showDebugInfo()">Show Debug Info</button>
+            <div id="debugInfo" class="debug-info" style="display:none;"></div>
+        </div>
+
+        <!-- Admin Menu Test -->
+        <div class="test-section">
+            <h3>👑 Admin Menu Test</h3>
+            <p>Admin menu should appear in the navbar dropdown when logged in as admin.</p>
+            <button class="btn btn-warning" onclick="testAdminMenu()">Test Admin Menu Visibility</button>
+            <button class="btn btn-success" onclick="forceUpdateAdminMenu()">Force Update Admin Menu</button>
+        </div>
+
+        <!-- Functions Test -->
+        <div class="test-section">
+            <h3>⚙️ Functions Test</h3>
+            <button class="btn btn-success" onclick="testIsAdmin()">Test isAdmin()</button>
+            <button class="btn btn-success" onclick="testGetCurrentUser()">Test getCurrentUser()</button>
+            <button class="btn btn-success" onclick="testUpdateAdminMenu()">Test updateAdminMenu()</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Include config.js first -->
+    <script src="js/config.js"></script>
+    
+    <!-- Include auth.js -->
+    <script src="js/auth.js"></script>
+    
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        // Test functions
+        function testAdminMenu() {
+            const adminMenu = document.getElementById('admin-menu');
+            const isAdminUser = isAdmin();
+            
+            console.log('🔧 Admin Menu Test:', {
+                adminMenu: adminMenu ? 'Found' : 'Not found',
+                isAdmin: isAdminUser,
+                display: adminMenu ? adminMenu.style.display : 'N/A'
+            });
+            
+            alert(`Admin Menu Test:\n- Element found: ${adminMenu ? 'Yes' : 'No'}\n- Is Admin: ${isAdminUser}\n- Display: ${adminMenu ? adminMenu.style.display : 'N/A'}`);
+        }
+
+        function forceUpdateAdminMenu() {
+            console.log('🔄 Force updating admin menu...');
+            updateAdminMenu();
+            checkAdminStatus();
+            alert('Admin menu updated! Check console for details.');
+        }
+
+        function testIsAdmin() {
+            const result = isAdmin();
+            console.log('🔍 isAdmin() test result:', result);
+            alert(`isAdmin() result: ${result}`);
+        }
+
+        function testGetCurrentUser() {
+            const user = getCurrentUser();
+            console.log('👤 getCurrentUser() result:', user);
+            alert(`getCurrentUser() result: ${user ? 'User found' : 'No user'}`);
+        }
+
+        function testUpdateAdminMenu() {
+            updateAdminMenu();
+            alert('updateAdminMenu() called! Check console for details.');
+        }
+
+        function showDebugInfo() {
+            const user = getCurrentUser();
+            const token = localStorage.getItem('authToken');
+            const isAdminUser = isAdmin();
+            const adminMenu = document.getElementById('admin-menu');
+            
+            const debugInfo = `
+                <h5>Current State:</h5>
+                <p><strong>User:</strong> ${user ? JSON.stringify(user, null, 2) : 'None'}</p>
+                <p><strong>Token:</strong> ${token ? 'Present' : 'Missing'}</p>
+                <p><strong>isAdmin():</strong> ${isAdminUser}</p>
+                <p><strong>User isAdmin field:</strong> ${user?.isAdmin} (type: ${typeof user?.isAdmin})</p>
+                <p><strong>Admin menu element:</strong> ${adminMenu ? 'Found' : 'Not found'}</p>
+                <p><strong>Admin menu display:</strong> ${adminMenu ? adminMenu.style.display : 'N/A'}</p>
+            `;
+            
+            document.getElementById('debugInfo').innerHTML = debugInfo;
+            document.getElementById('debugInfo').style.display = 'block';
+        }
+
+        // Mock functions for testing
+        function openLoginModal() {
+            alert('Login modal would open here');
+        }
+
+        function openRegisterModal() {
+            alert('Register modal would open here');
+        }
+
+        function openAdminPanel() {
+            alert('Admin panel would open here');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Test Main Page Loaded');
+            updateUserDropdown();
+        });
+    </script>
+</body>
+</html> 
