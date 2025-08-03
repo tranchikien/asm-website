@@ -606,52 +606,147 @@ const gamesData = [
     }
 ];
 
-// ===== UTILITY FUNCTIONS =====
+// ===== PAGE NAVIGATION FUNCTIONS =====
 
-/**
- * Format price to Vietnamese currency
- */
-function formatPrice(price) {
-    if (price === 0) return 'Miễn phí';
-    return price.toLocaleString('vi-VN') + ' VNĐ';
+function showHomePage() {
+    hideAllPages();
+    document.getElementById('home').style.display = 'block';
+    updateBreadcrumb('Home');
+    renderParallaxHeroBanner();
+    populateFeaturedGames();
 }
 
-/**
- * Show toast notification
- */
+function showAllGames() {
+    hideAllPages();
+    document.getElementById('games').style.display = 'block';
+    updateBreadcrumb('All Games');
+    loadGames();
+}
+
+function showSaleGames() {
+    hideAllPages();
+    document.getElementById('games').style.display = 'block';
+    updateBreadcrumb('Sale Games');
+    filterGamesBySale();
+}
+
+function showContactPage() {
+    hideAllPages();
+    document.getElementById('contact').style.display = 'block';
+    updateBreadcrumb('Contact');
+}
+
+function showProfilePage() {
+    if (!isLoggedIn()) {
+        showToast('Please login to view profile', 'error');
+        openModal('loginModal');
+        return;
+    }
+    
+    hideAllPages();
+    document.getElementById('profile').style.display = 'block';
+    updateBreadcrumb('Profile');
+    loadUserProfile();
+}
+
+function showWishlist() {
+    if (!isLoggedIn()) {
+        showToast('Please login to view wishlist', 'error');
+        openModal('loginModal');
+        return;
+    }
+    
+    hideAllPages();
+    document.getElementById('wishlist').style.display = 'block';
+    updateBreadcrumb('Wishlist');
+    loadWishlist();
+}
+
+function showOrderHistory() {
+    if (!isLoggedIn()) {
+        showToast('Please login to view order history', 'error');
+        openModal('loginModal');
+        return;
+    }
+    
+    hideAllPages();
+    document.getElementById('order-history-page').style.display = 'block';
+    updateBreadcrumb('Order History');
+    loadOrderHistory();
+}
+
+function showCartPage() {
+    hideAllPages();
+    document.getElementById('cart-page').style.display = 'block';
+    updateBreadcrumb('Shopping Cart');
+    updateCartPage();
+}
+
+function hideAllPages() {
+    const pages = ['home', 'games', 'contact', 'profile', 'wishlist', 'order-history-page', 'cart-page'];
+    pages.forEach(pageId => {
+        const page = document.getElementById(pageId);
+        if (page) page.style.display = 'none';
+    });
+}
+
+function updateBreadcrumb(page) {
+    const breadcrumb = document.getElementById('breadcrumb-nav');
+    if (breadcrumb) {
+        breadcrumb.innerHTML = `
+            <li class="breadcrumb-item">
+                <a href="#" class="text-orange text-decoration-none" onclick="showHomePage()">
+                    <i class="fas fa-home me-1"></i>Home
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">${page}</li>
+        `;
+    }
+}
+
+// ===== UTILITY FUNCTIONS =====
+
+function formatPrice(price) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(price);
+}
+
 function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        // Create toast container if it doesn't exist
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+
     const toastId = 'toast-' + Date.now();
-    
-    const toastHTML = `
-        <div id="${toastId}" class="toast toast-${type} show" role="alert">
-            <div class="toast-header">
-                <strong class="me-auto">
-                    ${type === 'success' ? '<i class="fas fa-check-circle text-success"></i>' : ''}
-                    ${type === 'error' ? '<i class="fas fa-exclamation-circle text-danger"></i>' : ''}
-                    ${type === 'info' ? '<i class="fas fa-info-circle text-info"></i>' : ''}
-                    ${type === 'warning' ? '<i class="fas fa-exclamation-triangle text-warning"></i>' : ''}
-                    Thông báo
-                </strong>
-                <button type="button" class="btn-close btn-close-white" onclick="removeToast('${toastId}')"></button>
-            </div>
-            <div class="toast-body">
-                ${message}
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     `;
-    
-    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-    
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement);
+    toast.show();
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         removeToast(toastId);
     }, 5000);
 }
 
-/**
- * Remove toast notification
- */
 function removeToast(toastId) {
     const toast = document.getElementById(toastId);
     if (toast) {
@@ -659,17 +754,18 @@ function removeToast(toastId) {
     }
 }
 
-/**
- * Validate email format
- */
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-/**
- * Initialize smooth scrolling
- */
+function openModal(modalId) {
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
+    modal.show();
+}
+
+// ===== ANIMATION FUNCTIONS =====
+
 function initializeSmoothScrolling() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -685,272 +781,146 @@ function initializeSmoothScrolling() {
     });
 }
 
-/**
- * Initialize animations
- */
 function initializeAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
+    // Intersection Observer for fade-in animations
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('fade-in');
             }
         });
-    }, observerOptions);
+    }, {
+        threshold: 0.1
+    });
 
-    // Observe all game cards and sections
-    document.querySelectorAll('.game-card, .section-title, .filters-section').forEach(el => {
+    // Observe elements with animation classes
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
         observer.observe(el);
     });
 }
 
-/**
- * Initialize page
- */
+// ===== INITIALIZATION FUNCTIONS =====
+
 async function initializePage() {
-    // Show home page by default
-    showHomePage();
-    
-    // Load cart from storage
-    loadCartFromStorage();
-    
-    // Initialize smooth scrolling
-    initializeSmoothScrolling();
+    console.log('🚀 Initializing page...');
     
     // Initialize animations
+    initializeSmoothScrolling();
     initializeAnimations();
     
-    // Check login status and validate session
+    // Check login status
     await checkLoginStatus();
     
-    // Show toast notification
-    // Welcome to KIENSTORE!
+    // Load initial content
+    showHomePage();
+    
+    console.log('✅ Page initialization completed');
 }
 
-/**
- * Check login status and update UI
- */
 async function checkLoginStatus() {
-    // Clean up any inconsistent session data first
-    if (typeof cleanupSessionData === 'function') {
-        cleanupSessionData();
-    }
-    
-    // Validate session if user is logged in
     const user = getCurrentUser();
     const token = localStorage.getItem('authToken');
     
     if (user && token) {
-        // Try to validate session
-        if (typeof validateSession === 'function') {
-            await validateSession();
+        try {
+            // Validate session with server
+            const isValid = await validateSession();
+            if (!isValid) {
+                console.log('❌ Session validation failed');
+                return;
+            }
+        } catch (error) {
+            console.error('Session validation error:', error);
         }
     }
     
-    // Use the centralized updateUserDropdown function
-    if (typeof updateUserDropdown === 'function') {
-        updateUserDropdown();
-    }
-    
-    // Force update admin menu
-    if (typeof updateAdminMenu === 'function') {
-        updateAdminMenu();
-    }
+    // Update UI based on login status
+    updateUserDropdown();
 }
 
-/**
- * Show Profile Page (mở modal thay vì section)
- */
-function showProfilePage() {
+// ===== PROFILE FUNCTIONS =====
+
+async function loadUserProfile() {
+    if (!isLoggedIn()) {
+        showToast('Please login to view profile', 'error');
+        return;
+    }
+    
     try {
-        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-        if (loginModal) loginModal.hide();
-        const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
-        if (registerModal) registerModal.hide();
-    } catch {}
-    openModal('profileModal');
-            // Profile page opened
-}
-
-/**
- * Dynamic Parallax Hero Banner for Featured Games
- */
-function renderParallaxHeroBanner() {
-    const bannerEl = document.getElementById('parallaxHeroBanner');
-    if (!bannerEl) return;
-    const featuredGames = (typeof gamesData !== 'undefined' ? gamesData : (typeof allGames !== 'undefined' ? allGames : [])).filter(g => g.isFeatured);
-    if (!featuredGames.length) return;
-
-    let current = 0;
-    let intervalId = null;
-
-    function renderSlide(idx) {
-        const game = featuredGames[idx];
-        bannerEl.innerHTML = `
-            <div class="parallax-bg position-absolute w-100 h-100" style="background-image: url('${game.banner || game.image}'); background-size: cover; background-position: center; filter: brightness(0.6); transition: background 0.8s; will-change: background;"></div>
-            <div class="parallax-fg position-absolute d-none d-lg-block" style="right: 5%; top: 50%; transform: translateY(-50%); z-index: 2; pointer-events: none;">
-                <img src="${game.image}" alt="${game.name}" class="floating-img" style="width: 420px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); transition: transform 0.5s; will-change: transform;" />
-            </div>
-            <div class="hero-content position-relative z-3 text-white" style="max-width: 600px; margin-left: 5%; top: 25%;">
-                <h1 class="display-3 fw-bold mb-3">${game.name}</h1>
-                <div class="mb-3">
-                                          <span class="badge bg-orange fs-5 py-2 px-4">${formatPrice(game.price)}</span>
-                </div>
-                <p class="lead mb-4">${game.description.substring(0, 120)}...</p>
-                <div class="d-flex gap-3">
-                  <button class="btn btn-orange btn-lg px-4" onclick="showProductDetailPage(${game.id})"><i class="fas fa-info-circle me-2"></i>Chi tiết</button>
-                  <button class="btn btn-outline-light btn-lg px-4" onclick="addToCart({id: ${game.id}, name: '${game.name}', price: ${game.price}, image: '${game.image}'})"><i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ</button>
-                </div>
-            </div>
-            <div class="parallax-controls position-absolute w-100 d-flex justify-content-between align-items-center px-3" style="top: 50%; left: 0; z-index: 10; pointer-events: none;">
-                <button class="btn btn-outline-light btn-lg" style="pointer-events: all;" aria-label="Trước" id="parallaxPrevBtn"><i class="fas fa-chevron-left"></i></button>
-                <button class="btn btn-outline-light btn-lg" style="pointer-events: all;" aria-label="Sau" id="parallaxNextBtn"><i class="fas fa-chevron-right"></i></button>
-            </div>
-            <div class="parallax-indicators position-absolute w-100 d-flex justify-content-center" style="bottom: 24px; z-index: 10;">
-                ${featuredGames.map((_, i) => `<span class="mx-1 rounded-circle" style="display:inline-block;width:12px;height:12px;background:${i===idx?'#f97316':'#fff3'};border:2px solid #fff;cursor:pointer;transition:background 0.3s;" data-idx="${i}"></span>`).join('')}
-            </div>
-        `;
-    }
-
-    function goTo(idx) {
-        current = (idx + featuredGames.length) % featuredGames.length;
-        renderSlide(current);
-    }
-
-    function next() { goTo(current + 1); }
-    function prev() { goTo(current - 1); }
-
-    function startAuto() {
-        if (intervalId) clearInterval(intervalId);
-        intervalId = setInterval(next, 6000);
-    }
-
-    function stopAuto() {
-        if (intervalId) clearInterval(intervalId);
-    }
-
-    // Parallax effect
-    function handleParallax(e) {
-        const bg = bannerEl.querySelector('.parallax-bg');
-        const fg = bannerEl.querySelector('.parallax-fg img');
-        const rect = bannerEl.getBoundingClientRect();
-        let x = 0, y = 0;
-        if (e.type.startsWith('mouse')) {
-            x = (e.clientX - rect.left) / rect.width - 0.5;
-            y = (e.clientY - rect.top) / rect.height - 0.5;
-        } else if (e.type.startsWith('touch')) {
-            const touch = e.touches[0];
-            x = (touch.clientX - rect.left) / rect.width - 0.5;
-            y = (touch.clientY - rect.top) / rect.height - 0.5;
-        } else if (e.type === 'scroll') {
-            y = window.scrollY / window.innerHeight - 0.5;
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const user = await response.json();
+            displayUserProfile(user);
+        } else {
+            showToast('Failed to load profile', 'error');
         }
-        if (bg) bg.style.transform = `scale(1.08) translate(${x * 30}px, ${y * 30}px)`;
-        if (fg) fg.style.transform = `translateY(${y * 30}px) translateX(${x * 30}px) scale(1.04)`;
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        showToast('Error loading profile', 'error');
     }
-
-    // Initial render
-    renderSlide(current);
-    startAuto();
-
-    // Event listeners
-    bannerEl.addEventListener('mousemove', handleParallax);
-    bannerEl.addEventListener('touchmove', handleParallax);
-    window.addEventListener('scroll', handleParallax);
-
-    bannerEl.addEventListener('mouseleave', () => {
-        const bg = bannerEl.querySelector('.parallax-bg');
-        const fg = bannerEl.querySelector('.parallax-fg img');
-        if (bg) bg.style.transform = '';
-        if (fg) fg.style.transform = '';
-    });
-
-    bannerEl.addEventListener('mouseenter', stopAuto);
-    bannerEl.addEventListener('mouseleave', startAuto);
-
-    // Navigation
-    bannerEl.addEventListener('click', function(e) {
-        if (e.target.closest('#parallaxPrevBtn')) {
-            prev(); startAuto();
-        } else if (e.target.closest('#parallaxNextBtn')) {
-            next(); startAuto();
-        } else if (e.target.matches('.parallax-indicators span')) {
-            const idx = Number(e.target.getAttribute('data-idx'));
-            goTo(idx); startAuto();
-        }
-    });
 }
 
-/**
- * Populate featured games section
- */
-function populateFeaturedGames() {
-    const featuredGamesGrid = document.getElementById('featured-games-grid');
-    if (!featuredGamesGrid) return;
+function displayUserProfile(user) {
+    const profileEl = document.getElementById('profile');
+    if (!profileEl) return;
     
-    const featuredGames = gamesData.filter(game => game.isFeatured);
-    let gamesHTML = '';
-    
-    featuredGames.forEach(game => {
-        gamesHTML += createEnhancedGameCard(game);
-    });
-    
-    featuredGamesGrid.innerHTML = gamesHTML;
-}
-
-/**
- * Create enhanced game card with badges and ratings
- */
-function createEnhancedGameCard(game) {
-    const badges = [];
-    if (game.isHot) badges.push('<span class="card-badge badge-hot">HOT</span>');
-    if (game.isNew) badges.push('<span class="card-badge badge-new">NEW</span>');
-    if (game.isSale) badges.push(`<span class="card-badge badge-sale">-${game.sale}%</span>`);
-    
-    const rating = Math.floor(Math.random() * 2) + 4; // Random rating 4-5
-    const sold = Math.floor(Math.random() * 1000) + 100; // Random sold count
-    
-    return `
-        <div class="col-md-3 col-sm-6 mb-4">
-            <div class="game-card card-hover h-100" onclick="showGameDetail(${game.id})">
-                ${badges.join('')}
-                <div class="game-rating">
-                    <i class="fas fa-star"></i> ${rating}.0
-                </div>
-                <div class="game-sold">
-                    <i class="fas fa-users"></i> ${sold}
-                </div>
-                <div class="card-image-container">
-                    <img src="${game.image}" class="game-card-image" alt="${game.name}">
-                    <div class="card-overlay">
-                        <div class="overlay-content">
-                            <button class="btn btn-orange btn-sm mb-2" onclick="event.stopPropagation(); addToCart({id: ${game.id}, name: '${game.name}', price: ${game.price}, image: '${game.image}'})">
-                                <i class="fas fa-cart-plus me-1"></i>Add to Cart
-                            </button>
-                            <button class="btn btn-outline-light btn-sm" onclick="event.stopPropagation(); addToWishlist(${game.id})">
-                                <i class="fas fa-heart me-1"></i>Wishlist
-                            </button>
+    profileEl.innerHTML = `
+        <div class="container py-5">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="card bg-dark border-secondary">
+                        <div class="card-header">
+                            <h4><i class="fas fa-user me-2"></i>User Profile</h4>
                         </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">${game.name}</h5>
-                    <p class="card-text">${game.description.substring(0, 80)}...</p>
-                    <div class="price-section">
-                        ${game.price === 0 ? 
-                            `<span class="price text-success fw-bold">Miễn phí</span>` :
-                            game.isSale && game.sale > 0 ? 
-                                `<div class="d-flex flex-column">
-                                    <span class="price text-orange fw-bold">${formatPrice(game.price * (1 - game.sale / 100))}</span>
-                                    <span class="price-old text-muted text-decoration-line-through" style="font-size: 0.9em;">${formatPrice(game.price)}</span>
-                                    <span class="badge bg-danger" style="font-size: 0.7em;">-${game.sale}%</span>
-                                </div>` : 
-                                `<span class="price text-orange fw-bold">${formatPrice(game.price)}</span>`
-                        }
+                        <div class="card-body">
+                            <form id="profileForm">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="profileFullname" class="form-label">Full Name</label>
+                                        <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                               id="profileFullname" value="${user.fullname || ''}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="profileEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control bg-dark text-light border-secondary" 
+                                               id="profileEmail" value="${user.email || ''}" readonly>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="profilePhone" class="form-label">Phone</label>
+                                        <input type="tel" class="form-control bg-dark text-light border-secondary" 
+                                               id="profilePhone" value="${user.phone || ''}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="profileBirthday" class="form-label">Birthday</label>
+                                        <input type="date" class="form-control bg-dark text-light border-secondary" 
+                                               id="profileBirthday" value="${user.birthday ? user.birthday.split('T')[0] : ''}">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profileAddress" class="form-label">Address</label>
+                                    <textarea class="form-control bg-dark text-light border-secondary" 
+                                              id="profileAddress" rows="3">${user.address || ''}</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profileLocation" class="form-label">Location</label>
+                                    <input type="text" class="form-control bg-dark text-light border-secondary" 
+                                           id="profileLocation" value="${user.location || ''}">
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-orange" onclick="updateProfile()">
+                                        <i class="fas fa-save me-2"></i>Update Profile
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -958,17 +928,320 @@ function createEnhancedGameCard(game) {
     `;
 }
 
-/**
- * Render cart dropdown
- */
-function renderCartDropdown() {
-    const itemsEl = document.getElementById('cart-dropdown-items');
-    const totalEl = document.getElementById('cart-dropdown-total');
-    if (!itemsEl || !totalEl) return;
+async function updateProfile() {
+    if (!isLoggedIn()) {
+        showToast('Please login to update profile', 'error');
+        return;
+    }
     
-    if (!cart || cart.length === 0) {
-        itemsEl.innerHTML = '<div class="text-center text-muted py-3">Giỏ hàng trống</div>';
-        totalEl.textContent = '0 VNĐ';
+    const profileData = {
+        fullname: document.getElementById('profileFullname').value,
+        phone: document.getElementById('profilePhone').value,
+        birthday: document.getElementById('profileBirthday').value,
+        address: document.getElementById('profileAddress').value,
+        location: document.getElementById('profileLocation').value
+    };
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/users/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(profileData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showToast('Profile updated successfully', 'success');
+            
+            // Update local storage
+            updateUserProfile(result.user);
+        } else {
+            showToast('Failed to update profile', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        showToast('Error updating profile', 'error');
+    }
+}
+
+// ===== WISHLIST FUNCTIONS =====
+
+function loadWishlist() {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    displayWishlist(wishlist);
+}
+
+function displayWishlist(wishlist) {
+    const wishlistEl = document.getElementById('wishlist');
+    if (!wishlistEl) return;
+    
+    if (wishlist.length === 0) {
+        wishlistEl.innerHTML = `
+            <div class="container py-5">
+                <div class="text-center">
+                    <i class="fas fa-heart text-muted fa-3x mb-3"></i>
+                    <h5 class="text-muted">Your wishlist is empty</h5>
+                    <p class="text-muted">Add some games to your wishlist!</p>
+                    <button class="btn btn-orange" onclick="showAllGames()">
+                        <i class="fas fa-gamepad me-2"></i>Browse Games
+                    </button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `
+        <div class="container py-5">
+            <h3 class="mb-4"><i class="fas fa-heart text-danger me-2"></i>My Wishlist</h3>
+            <div class="row">
+    `;
+    
+    wishlist.forEach(game => {
+        html += `
+            <div class="col-md-4 mb-4">
+                <div class="card bg-dark border-secondary h-100">
+                    <img src="${game.image}" class="card-img-top" alt="${game.name}" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h6 class="card-title">${game.name}</h6>
+                        <p class="card-text text-muted">${game.category || 'N/A'}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="price-info">
+                                ${game.isSale ? `
+                                    <div class="text-decoration-line-through text-muted">${formatPrice(game.originalPrice)}</div>
+                                    <div class="text-orange fw-bold">${formatPrice(game.price)}</div>
+                                    <span class="badge bg-danger">-${game.sale}%</span>
+                                ` : `
+                                    <div class="fw-bold">${formatPrice(game.price)}</div>
+                                `}
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-orange" onclick="addToCart(${JSON.stringify(game).replace(/"/g, '&quot;')})">
+                                    <i class="fas fa-cart-plus"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeFromWishlist('${game.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    wishlistEl.innerHTML = html;
+}
+
+function addToWishlist(game) {
+    if (!isLoggedIn()) {
+        showToast('Please login to add to wishlist', 'error');
+        openModal('loginModal');
+        return;
+    }
+    
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const existingIndex = wishlist.findIndex(item => item.id === game.id);
+    
+    if (existingIndex === -1) {
+        wishlist.push(game);
+        localStorage.setItem('wishlist', JSON.stringify(wishlist));
+        showToast('Added to wishlist', 'success');
+    } else {
+        showToast('Already in wishlist', 'info');
+    }
+}
+
+function removeFromWishlist(gameId) {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const updatedWishlist = wishlist.filter(item => item.id !== gameId);
+    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+    showToast('Removed from wishlist', 'success');
+    loadWishlist();
+}
+
+// ===== PARALLAX HERO BANNER =====
+
+function renderParallaxHeroBanner() {
+    const bannerEl = document.getElementById('parallaxHeroBanner');
+    if (!bannerEl) return;
+
+    const slides = [
+        {
+            image: 'images/header.jpg',
+            title: 'Welcome to KIENSTORE',
+            subtitle: 'Your Ultimate Gaming Destination',
+            description: 'Discover the latest and greatest games across all platforms'
+        },
+        {
+            image: 'images/cyberpunk-2077-he-lo-su-kien-cro-3340512c-image-578665117.jpg.webp',
+            title: 'Cyberpunk 2077',
+            subtitle: 'Experience the Future',
+            description: 'Immerse yourself in the neon-lit world of Night City'
+        },
+        {
+            image: 'images/zelda-16800558113671797143763.webp',
+            title: 'The Legend of Zelda',
+            subtitle: 'Adventure Awaits',
+            description: 'Embark on an epic journey through Hyrule'
+        }
+    ];
+
+    let current = 0;
+    let autoPlayInterval;
+
+    function renderSlide(idx) {
+        const slide = slides[idx];
+        bannerEl.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('${slide.image}')`;
+        
+        const content = bannerEl.querySelector('.hero-content') || document.createElement('div');
+        content.className = 'hero-content text-center text-white position-absolute top-50 start-50 translate-middle w-100';
+        content.innerHTML = `
+            <div class="container">
+                <h1 class="display-4 fw-bold mb-3 animate__animated animate__fadeInDown">${slide.title}</h1>
+                <h3 class="mb-3 animate__animated animate__fadeInUp animate__delay-1s">${slide.subtitle}</h3>
+                <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-2s">${slide.description}</p>
+                <button class="btn btn-orange btn-lg animate__animated animate__fadeInUp animate__delay-3s" onclick="showAllGames()">
+                    <i class="fas fa-gamepad me-2"></i>Explore Games
+                </button>
+            </div>
+        `;
+        
+        if (!bannerEl.querySelector('.hero-content')) {
+            bannerEl.appendChild(content);
+        }
+    }
+
+    function goTo(idx) {
+        current = (idx + slides.length) % slides.length;
+        renderSlide(current);
+    }
+
+    function next() { goTo(current + 1); }
+    function prev() { goTo(current - 1); }
+
+    function startAuto() {
+        autoPlayInterval = setInterval(next, 5000);
+    }
+
+    function stopAuto() {
+        clearInterval(autoPlayInterval);
+    }
+
+    function handleParallax(e) {
+        const scrolled = window.pageYOffset;
+        const rate = scrolled * -0.5;
+        bannerEl.style.transform = `translateY(${rate}px)`;
+    }
+
+    // Initialize
+    renderSlide(0);
+    startAuto();
+
+    // Event listeners
+    bannerEl.addEventListener('mouseenter', stopAuto);
+    bannerEl.addEventListener('mouseleave', startAuto);
+
+    // Touch events for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    bannerEl.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    bannerEl.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                next();
+            } else {
+                prev();
+            }
+        }
+    }
+
+    // Parallax effect
+    window.addEventListener('scroll', handleParallax);
+}
+
+// ===== FEATURED GAMES =====
+
+function populateFeaturedGames() {
+    const featuredContainer = document.getElementById('featured-games');
+    if (!featuredContainer) return;
+
+    const featuredGames = gamesData.slice(0, 6); // Show first 6 games
+    let html = '';
+
+    featuredGames.forEach(game => {
+        html += createEnhancedGameCard(game);
+    });
+
+    featuredContainer.innerHTML = html;
+}
+
+function createEnhancedGameCard(game) {
+    const saleBadge = game.isSale ? `<span class="badge bg-danger position-absolute top-0 start-0 m-2">-${game.sale}%</span>` : '';
+    const priceDisplay = game.isSale ? 
+        `<div class="text-decoration-line-through text-muted">${formatPrice(game.originalPrice)}</div>
+         <div class="text-orange fw-bold">${formatPrice(game.price)}</div>` : 
+        `<div class="fw-bold">${formatPrice(game.price)}</div>`;
+
+    return `
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark border-secondary h-100 game-card animate-on-scroll">
+                ${saleBadge}
+                <img src="${game.image}" class="card-img-top" alt="${game.name}" style="height: 200px; object-fit: cover;">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title">${game.name}</h6>
+                    <p class="card-text text-muted flex-grow-1">${game.category || 'N/A'}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="price-info">
+                            ${priceDisplay}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-orange" onclick="addToCart(${JSON.stringify(game).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-cart-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="addToWishlist(${JSON.stringify(game).replace(/"/g, '&quot;')})">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===== CART DROPDOWN =====
+
+function renderCartDropdown() {
+    const cartItems = document.getElementById('cart-dropdown-items');
+    const cartTotal = document.getElementById('cart-dropdown-total');
+    
+    if (!cartItems || !cartTotal) return;
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = '<div class="text-center py-3"><i class="fas fa-shopping-cart text-muted"></i><p class="text-muted mb-0">Cart is empty</p></div>';
+        cartTotal.textContent = '0 VNĐ';
         return;
     }
     
@@ -978,32 +1251,26 @@ function renderCartDropdown() {
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
+        
         html += `
-            <div class="cart-dropdown-item">
-                <img src="${item.image}" alt="${item.name}">
-                <div class="item-info">
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-price">
-                        ${item.sale > 0 ? 
-                            `<div class="d-flex flex-column">
-                                <span class="text-orange fw-bold">${formatPrice(item.price)}</span>
-                                <span class="text-decoration-line-through" style="font-size: 0.7em;">${formatPrice(item.originalPrice)}</span>
-                                <span class="badge bg-danger" style="font-size: 0.5em;">-${item.sale}%</span>
-                            </div>` : 
-                            `${formatPrice(item.price)}`
-                        } x ${item.quantity}
-                    </div>
+            <div class="cart-dropdown-item d-flex align-items-center p-2">
+                <img src="${item.image}" alt="${item.name}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="flex-grow-1">
+                    <div class="fw-bold">${item.name}</div>
+                    <div class="text-muted">${formatPrice(item.price)} x ${item.quantity}</div>
                 </div>
-                <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${item.id}); renderCartDropdown(); event.stopPropagation();">
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart('${item.id}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         `;
     });
     
-    itemsEl.innerHTML = html;
-    totalEl.textContent = formatPrice(total);
+    cartItems.innerHTML = html;
+    cartTotal.textContent = formatPrice(total);
 }
+
+// ===== INITIALIZATION =====
 
 // Call this after DOMContentLoaded
 if (document.readyState === 'loading') {
