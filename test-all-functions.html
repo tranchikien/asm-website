@@ -3,481 +3,513 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KIENSTORE - Function Test</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet">
+    <title>Test All Functions - ASM Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #000;
+        }
+        .result {
+            background: #333;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .result.success {
+            border-left-color: #28a745;
+        }
+        .result.error {
+            border-left-color: #dc3545;
+        }
+        .result.warning {
+            border-left-color: #ffc107;
+        }
+        .console-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
-    <div class="container py-5">
-        <h1 class="text-center mb-5">
-            <i class="fas fa-gamepad text-orange me-3"></i>
-            KIENSTORE Function Test
-        </h1>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-user me-2"></i>Authentication Test</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Admin Login Test</label>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-orange" onclick="testAdminLogin()">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Test Admin Login
-                                </button>
-                                <button class="btn btn-outline-info" onclick="testUserLogin()">
-                                    <i class="fas fa-user me-2"></i>Test User Login
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Registration Test</label>
-                            <button class="btn btn-success" onclick="testRegistration()">
-                                <i class="fas fa-user-plus me-2"></i>Test Registration
-                            </button>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Logout Test</label>
-                            <button class="btn btn-danger" onclick="testLogout()">
-                                <i class="fas fa-sign-out-alt me-2"></i>Test Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-shopping-cart me-2"></i>Cart & Order Test</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Cart Functions</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-sm btn-orange" onclick="testAddToCart()">
-                                    <i class="fas fa-cart-plus me-1"></i>Add to Cart
-                                </button>
-                                <button class="btn btn-sm btn-outline-info" onclick="testViewCart()">
-                                    <i class="fas fa-eye me-1"></i>View Cart
-                                </button>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-success" onclick="testCheckout()">
-                                    <i class="fas fa-credit-card me-1"></i>Test Checkout
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="testOrderHistory()">
-                                    <i class="fas fa-history me-1"></i>Order History
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-heart me-2"></i>Wishlist Test</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Wishlist Functions</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-sm btn-danger" onclick="testAddToWishlist()">
-                                    <i class="fas fa-heart me-1"></i>Add to Wishlist
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="testViewWishlist()">
-                                    <i class="fas fa-eye me-1"></i>View Wishlist
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-user-cog me-2"></i>Profile Test</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Profile Functions</label>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-info" onclick="testLoadProfile()">
-                                    <i class="fas fa-user me-1"></i>Load Profile
-                                </button>
-                                <button class="btn btn-sm btn-outline-info" onclick="testUpdateProfile()">
-                                    <i class="fas fa-edit me-1"></i>Update Profile
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-shield-alt me-2"></i>Admin Panel Test</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Admin Functions</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-sm btn-warning" onclick="testAdminPanel()">
-                                    <i class="fas fa-cog me-1"></i>Open Admin Panel
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="testAddProduct()">
-                                    <i class="fas fa-plus me-1"></i>Add Product
-                                </button>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-info" onclick="testAdminOrders()">
-                                    <i class="fas fa-list me-1"></i>View Orders
-                                </button>
-                                <button class="btn btn-sm btn-outline-success" onclick="testAdminUsers()">
-                                    <i class="fas fa-users me-1"></i>View Users
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary mb-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-gamepad me-2"></i>Games Test</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Games Functions</label>
-                            <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-sm btn-primary" onclick="testShowAllGames()">
-                                    <i class="fas fa-list me-1"></i>Show All Games
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="testShowSaleGames()">
-                                    <i class="fas fa-tags me-1"></i>Show Sale Games
-                                </button>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-success" onclick="testSearchGames()">
-                                    <i class="fas fa-search me-1"></i>Search Games
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="testGameDetail()">
-                                    <i class="fas fa-eye me-1"></i>Game Detail
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="card bg-dark border-secondary">
-                    <div class="card-header">
-                        <h5><i class="fas fa-terminal me-2"></i>Test Results</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="test-results" class="bg-darker p-3 rounded" style="min-height: 200px; max-height: 400px; overflow-y: auto;">
-                            <p class="text-muted">Test results will appear here...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<body>
+    <h1>🧪 Test All Functions - ASM Website</h1>
+    
+    <div class="test-section">
+        <h2>🔐 Authentication Tests</h2>
+        <button class="test-button" onclick="testLogin()">Test Login</button>
+        <button class="test-button" onclick="testRegister()">Test Register</button>
+        <button class="test-button" onclick="testLogout()">Test Logout</button>
+        <button class="test-button" onclick="testAdminCheck()">Test Admin Check</button>
+        <div id="auth-results"></div>
     </div>
 
-    <!-- Test Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/cart.js"></script>
-    <script src="js/games.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/utils.js"></script>
+    <div class="test-section">
+        <h2>🎮 Games Tests</h2>
+        <button class="test-button" onclick="testShowAllGames()">Test Show All Games</button>
+        <button class="test-button" onclick="testRenderGames()">Test Render Games</button>
+        <button class="test-button" onclick="testGameData()">Test Game Data</button>
+        <div id="games-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🛒 Cart Tests</h2>
+        <button class="test-button" onclick="testAddToCart()">Test Add to Cart</button>
+        <button class="test-button" onclick="testRemoveFromCart()">Test Remove from Cart</button>
+        <button class="test-button" onclick="testCartStorage()">Test Cart Storage</button>
+        <div id="cart-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>👤 Profile Tests</h2>
+        <button class="test-button" onclick="testShowProfile()">Test Show Profile</button>
+        <button class="test-button" onclick="testUpdateProfile()">Test Update Profile</button>
+        <div id="profile-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>❤️ Wishlist Tests</h2>
+        <button class="test-button" onclick="testShowWishlist()">Test Show Wishlist</button>
+        <button class="test-button" onclick="testAddToWishlist()">Test Add to Wishlist</button>
+        <button class="test-button" onclick="testRemoveFromWishlist()">Test Remove from Wishlist</button>
+        <div id="wishlist-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📦 Order Tests</h2>
+        <button class="test-button" onclick="testShowOrderHistory()">Test Show Order History</button>
+        <button class="test-button" onclick="testCheckout()">Test Checkout</button>
+        <div id="order-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Utility Tests</h2>
+        <button class="test-button" onclick="testHideAllPages()">Test Hide All Pages</button>
+        <button class="test-button" onclick="testShowToast()">Test Show Toast</button>
+        <button class="test-button" onclick="testLocalStorage()">Test LocalStorage</button>
+        <div id="utility-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧹 Cleanup Tests</h2>
+        <button class="test-button danger" onclick="clearAllData()">Clear All Data</button>
+        <button class="test-button warning" onclick="resetPage()">Reset Page</button>
+        <div id="cleanup-results"></div>
+    </div>
+
+    <div class="console-output" id="console-output">
+        Console output will appear here...
+    </div>
 
     <script>
-        // Test Functions
-        function logTest(message, type = 'info') {
-            const results = document.getElementById('test-results');
+        // Redirect console.log to our output
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('console-output');
+        
+        function addToConsole(message, type = 'log') {
             const timestamp = new Date().toLocaleTimeString();
-            const color = type === 'error' ? 'text-danger' : type === 'success' ? 'text-success' : 'text-info';
+            const color = type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffd93d' : '#6bcf7f';
+            consoleOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+
+        // Test functions
+        function testLogin() {
+            console.log('🧪 Testing login...');
+            const result = document.getElementById('auth-results');
             
-            results.innerHTML += `
-                <div class="${color} mb-1">
-                    <small>[${timestamp}]</small> ${message}
-                </div>
-            `;
-            results.scrollTop = results.scrollHeight;
-        }
-
-        // Authentication Tests
-        async function testAdminLogin() {
-            logTest('🔐 Testing Admin Login...');
             try {
-                const result = await authenticateUser('admin@kienstore.com', 'admin123');
-                if (result.success) {
-                    logTest('✅ Admin login successful!', 'success');
-                    logTest(`User: ${result.user.fullname}, Admin: ${result.user.isAdmin}`, 'success');
+                if (typeof handleLogin === 'function') {
+                    result.innerHTML = '<div class="result success">✅ handleLogin function exists</div>';
                 } else {
-                    logTest(`❌ Admin login failed: ${result.message}`, 'error');
+                    result.innerHTML = '<div class="result error">❌ handleLogin function not found</div>';
                 }
             } catch (error) {
-                logTest(`❌ Admin login error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        async function testUserLogin() {
-            logTest('🔐 Testing User Login...');
+        function testRegister() {
+            console.log('🧪 Testing register...');
+            const result = document.getElementById('auth-results');
+            
             try {
-                const result = await authenticateUser('user@test.com', 'password123');
-                if (result.success) {
-                    logTest('✅ User login successful!', 'success');
+                if (typeof handleRegister === 'function') {
+                    result.innerHTML = '<div class="result success">✅ handleRegister function exists</div>';
                 } else {
-                    logTest(`❌ User login failed: ${result.message}`, 'error');
+                    result.innerHTML = '<div class="result error">❌ handleRegister function not found</div>';
                 }
             } catch (error) {
-                logTest(`❌ User login error: ${error.message}`, 'error');
-            }
-        }
-
-        async function testRegistration() {
-            logTest('📝 Testing Registration...');
-            try {
-                const userData = {
-                    email: 'test@example.com',
-                    password: 'Test123!',
-                    fullname: 'Test User',
-                    phone: '0123456789',
-                    address: 'Test Address',
-                    birthday: '1990-01-01',
-                    location: 'Test City'
-                };
-                
-                const result = await registerUser(userData);
-                if (result.success) {
-                    logTest('✅ Registration successful!', 'success');
-                } else {
-                    logTest(`❌ Registration failed: ${result.message}`, 'error');
-                }
-            } catch (error) {
-                logTest(`❌ Registration error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
         function testLogout() {
-            logTest('🚪 Testing Logout...');
+            console.log('🧪 Testing logout...');
+            const result = document.getElementById('auth-results');
+            
             try {
-                logout();
-                logTest('✅ Logout successful!', 'success');
+                if (typeof logout === 'function') {
+                    logout();
+                    result.innerHTML = '<div class="result success">✅ logout function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ logout function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Logout error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        // Cart Tests
+        function testAdminCheck() {
+            console.log('🧪 Testing admin check...');
+            const result = document.getElementById('auth-results');
+            
+            try {
+                if (typeof isAdmin === 'function') {
+                    const isAdminUser = isAdmin();
+                    result.innerHTML = `<div class="result success">✅ isAdmin function executed: ${isAdminUser}</div>`;
+                } else {
+                    result.innerHTML = '<div class="result error">❌ isAdmin function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testShowAllGames() {
+            console.log('🧪 Testing show all games...');
+            const result = document.getElementById('games-results');
+            
+            try {
+                if (typeof showAllGames === 'function') {
+                    showAllGames();
+                    result.innerHTML = '<div class="result success">✅ showAllGames function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showAllGames function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testRenderGames() {
+            console.log('🧪 Testing render games...');
+            const result = document.getElementById('games-results');
+            
+            try {
+                if (typeof renderGames === 'function') {
+                    renderGames();
+                    result.innerHTML = '<div class="result success">✅ renderGames function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ renderGames function not found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function testGameData() {
+            console.log('🧪 Testing game data...');
+            const result = document.getElementById('games-results');
+            
+            try {
+                if (typeof getGamesData === 'function') {
+                    const games = getGamesData();
+                    result.innerHTML = `<div class="result success">✅ getGamesData function executed: ${games.length} games found</div>`;
+                } else if (typeof gamesData !== 'undefined') {
+                    result.innerHTML = `<div class="result success">✅ gamesData variable exists: ${gamesData.length} games found</div>`;
+                } else {
+                    result.innerHTML = '<div class="result error">❌ No game data found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
         function testAddToCart() {
-            logTest('🛒 Testing Add to Cart...');
+            console.log('🧪 Testing add to cart...');
+            const result = document.getElementById('cart-results');
+            
             try {
-                const testGame = {
-                    id: 1,
-                    name: 'Test Game',
-                    price: 100000,
-                    image: 'images/test.jpg'
-                };
-                addToCart(testGame);
-                logTest('✅ Add to cart successful!', 'success');
+                if (typeof addToCart === 'function') {
+                    const testGame = {
+                        id: 999,
+                        name: 'Test Game',
+                        price: 100000,
+                        image: 'test.jpg'
+                    };
+                    addToCart(testGame);
+                    result.innerHTML = '<div class="result success">✅ addToCart function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ addToCart function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Add to cart error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testViewCart() {
-            logTest('👁️ Testing View Cart...');
+        function testRemoveFromCart() {
+            console.log('🧪 Testing remove from cart...');
+            const result = document.getElementById('cart-results');
+            
             try {
-                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                logTest(`Cart has ${cart.length} items`, 'info');
-                cart.forEach(item => {
-                    logTest(`- ${item.name}: ${item.price} VNĐ`, 'info');
-                });
+                if (typeof removeFromCart === 'function') {
+                    removeFromCart(999);
+                    result.innerHTML = '<div class="result success">✅ removeFromCart function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ removeFromCart function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ View cart error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testCheckout() {
-            logTest('💳 Testing Checkout...');
+        function testCartStorage() {
+            console.log('🧪 Testing cart storage...');
+            const result = document.getElementById('cart-results');
+            
             try {
-                handleCheckout();
-                logTest('✅ Checkout function called!', 'success');
+                if (typeof loadCartFromStorage === 'function') {
+                    loadCartFromStorage();
+                    result.innerHTML = '<div class="result success">✅ loadCartFromStorage function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ loadCartFromStorage function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Checkout error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testOrderHistory() {
-            logTest('📋 Testing Order History...');
+        function testShowProfile() {
+            console.log('🧪 Testing show profile...');
+            const result = document.getElementById('profile-results');
+            
             try {
-                loadOrderHistory();
-                logTest('✅ Order history loaded!', 'success');
+                if (typeof showProfilePage === 'function') {
+                    showProfilePage();
+                    result.innerHTML = '<div class="result success">✅ showProfilePage function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showProfilePage function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Order history error: ${error.message}`, 'error');
-            }
-        }
-
-        // Wishlist Tests
-        function testAddToWishlist() {
-            logTest('❤️ Testing Add to Wishlist...');
-            try {
-                const testGame = {
-                    id: 1,
-                    name: 'Test Game',
-                    price: 100000,
-                    image: 'images/test.jpg'
-                };
-                addToWishlist(testGame);
-                logTest('✅ Add to wishlist successful!', 'success');
-            } catch (error) {
-                logTest(`❌ Add to wishlist error: ${error.message}`, 'error');
-            }
-        }
-
-        function testViewWishlist() {
-            logTest('👁️ Testing View Wishlist...');
-            try {
-                const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-                logTest(`Wishlist has ${wishlist.length} items`, 'info');
-                wishlist.forEach(item => {
-                    logTest(`- ${item.name}: ${item.price} VNĐ`, 'info');
-                });
-            } catch (error) {
-                logTest(`❌ View wishlist error: ${error.message}`, 'error');
-            }
-        }
-
-        // Profile Tests
-        function testLoadProfile() {
-            logTest('👤 Testing Load Profile...');
-            try {
-                loadUserProfile();
-                logTest('✅ Load profile function called!', 'success');
-            } catch (error) {
-                logTest(`❌ Load profile error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
         function testUpdateProfile() {
-            logTest('✏️ Testing Update Profile...');
+            console.log('🧪 Testing update profile...');
+            const result = document.getElementById('profile-results');
+            
             try {
-                updateProfile();
-                logTest('✅ Update profile function called!', 'success');
+                if (typeof updateProfile === 'function') {
+                    result.innerHTML = '<div class="result success">✅ updateProfile function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ updateProfile function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Update profile error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        // Admin Tests
-        function testAdminPanel() {
-            logTest('⚙️ Testing Admin Panel...');
+        function testShowWishlist() {
+            console.log('🧪 Testing show wishlist...');
+            const result = document.getElementById('wishlist-results');
+            
             try {
-                openAdminPanel();
-                logTest('✅ Admin panel opened!', 'success');
+                if (typeof showWishlist === 'function') {
+                    showWishlist();
+                    result.innerHTML = '<div class="result success">✅ showWishlist function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showWishlist function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Admin panel error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testAddProduct() {
-            logTest('➕ Testing Add Product...');
+        function testAddToWishlist() {
+            console.log('🧪 Testing add to wishlist...');
+            const result = document.getElementById('wishlist-results');
+            
             try {
-                showAddProductModal();
-                logTest('✅ Add product modal opened!', 'success');
+                if (typeof addToWishlist === 'function') {
+                    addToWishlist(999);
+                    result.innerHTML = '<div class="result success">✅ addToWishlist function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ addToWishlist function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Add product error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testAdminOrders() {
-            logTest('📋 Testing Admin Orders...');
+        function testRemoveFromWishlist() {
+            console.log('🧪 Testing remove from wishlist...');
+            const result = document.getElementById('wishlist-results');
+            
             try {
-                showAdminOrders();
-                logTest('✅ Admin orders function called!', 'success');
+                if (typeof removeFromWishlist === 'function') {
+                    removeFromWishlist(999);
+                    result.innerHTML = '<div class="result success">✅ removeFromWishlist function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ removeFromWishlist function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Admin orders error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testAdminUsers() {
-            logTest('👥 Testing Admin Users...');
+        function testShowOrderHistory() {
+            console.log('🧪 Testing show order history...');
+            const result = document.getElementById('order-results');
+            
             try {
-                showAdminUsers();
-                logTest('✅ Admin users function called!', 'success');
+                if (typeof showOrderHistory === 'function') {
+                    showOrderHistory();
+                    result.innerHTML = '<div class="result success">✅ showOrderHistory function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showOrderHistory function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Admin users error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        // Games Tests
-        function testShowAllGames() {
-            logTest('🎮 Testing Show All Games...');
+        function testCheckout() {
+            console.log('🧪 Testing checkout...');
+            const result = document.getElementById('order-results');
+            
             try {
-                showAllGames();
-                logTest('✅ Show all games function called!', 'success');
+                if (typeof handleCheckout === 'function') {
+                    result.innerHTML = '<div class="result success">✅ handleCheckout function exists</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ handleCheckout function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Show all games error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testShowSaleGames() {
-            logTest('🏷️ Testing Show Sale Games...');
+        function testHideAllPages() {
+            console.log('🧪 Testing hide all pages...');
+            const result = document.getElementById('utility-results');
+            
             try {
-                showSaleGames();
-                logTest('✅ Show sale games function called!', 'success');
+                if (typeof hideAllPages === 'function') {
+                    hideAllPages();
+                    result.innerHTML = '<div class="result success">✅ hideAllPages function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ hideAllPages function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Show sale games error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testSearchGames() {
-            logTest('🔍 Testing Search Games...');
+        function testShowToast() {
+            console.log('🧪 Testing show toast...');
+            const result = document.getElementById('utility-results');
+            
             try {
-                searchGames();
-                logTest('✅ Search games function called!', 'success');
+                if (typeof showToast === 'function') {
+                    showToast('Test toast message', 'success');
+                    result.innerHTML = '<div class="result success">✅ showToast function executed</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ showToast function not found</div>';
+                }
             } catch (error) {
-                logTest(`❌ Search games error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        function testGameDetail() {
-            logTest('👁️ Testing Game Detail...');
+        function testLocalStorage() {
+            console.log('🧪 Testing localStorage...');
+            const result = document.getElementById('utility-results');
+            
             try {
-                showProductDetailPage(1);
-                logTest('✅ Game detail function called!', 'success');
+                localStorage.setItem('test', 'test-value');
+                const testValue = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (testValue === 'test-value') {
+                    result.innerHTML = '<div class="result success">✅ localStorage is working</div>';
+                } else {
+                    result.innerHTML = '<div class="result error">❌ localStorage is not working</div>';
+                }
             } catch (error) {
-                logTest(`❌ Game detail error: ${error.message}`, 'error');
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
         }
 
-        // Initialize test page
-        document.addEventListener('DOMContentLoaded', function() {
-            logTest('🚀 Test page initialized!', 'success');
-            logTest(`API Base URL: ${API_BASE_URL}`, 'info');
-            logTest(`Games Data Available: ${typeof gamesData !== 'undefined' ? 'Yes' : 'No'}`, 'info');
-            if (typeof gamesData !== 'undefined') {
-                logTest(`Games Count: ${gamesData.length}`, 'info');
+        function clearAllData() {
+            console.log('🧹 Clearing all data...');
+            const result = document.getElementById('cleanup-results');
+            
+            try {
+                localStorage.clear();
+                result.innerHTML = '<div class="result success">✅ All localStorage data cleared</div>';
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Error: ${error.message}</div>`;
             }
+        }
+
+        function resetPage() {
+            console.log('🔄 Resetting page...');
+            location.reload();
+        }
+
+        // Auto-run some tests on page load
+        window.addEventListener('load', function() {
+            console.log('🚀 Page loaded, running initial tests...');
+            testLocalStorage();
+            testGameData();
         });
     </script>
 </body>
