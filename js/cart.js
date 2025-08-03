@@ -102,178 +102,47 @@ function updateCartItemQuantity(gameId, newQuantity) {
 }
 
 function saveCartToStorage() {
-    console.log('🔍 Saving cart to storage:', cart);
-    localStorage.setItem('wongstore_cart', JSON.stringify(cart));
-    console.log('✅ Cart saved to storage');
+    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
 function loadCartFromStorage() {
-    console.log('🔍 Loading cart from storage');
-    const data = localStorage.getItem('wongstore_cart');
-    cart = data ? JSON.parse(data) : [];
-    console.log('✅ Cart loaded:', cart);
-    updateCartDisplay();
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+        try {
+            cart = JSON.parse(savedCart);
+            updateCartDisplay();
+        } catch (error) {
+            console.error('Error loading cart from storage:', error);
+            cart = [];
+        }
+    }
 }
 
 function updateCartDisplay() {
-    console.log('🔍 updateCartDisplay() called');
-    const badge = document.getElementById('cart-count');
-    if (!badge) {
-        console.log('❌ Cart count badge not found');
-        return;
+    const cartCount = document.getElementById('cart-count');
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    if (cartCount) {
+        if (totalItems > 0) {
+            cartCount.textContent = totalItems;
+            cartCount.style.display = 'block';
+        } else {
+            cartCount.style.display = 'none';
+        }
     }
-    const total = cart.reduce((sum, item) => sum + item.quantity, 0);
-    badge.textContent = total;
-    badge.style.display = total > 0 ? 'inline-block' : 'none';
-    console.log('✅ Cart display updated, total items:', total);
 }
 
 function updateCartModal() {
-    const container = document.getElementById('cart-items-container');
-    const empty = document.getElementById('cart-empty');
-    const totalEl = document.getElementById('cart-total');
-    const checkoutBtn = document.getElementById('checkout-btn');
-    if (!container || !empty || !totalEl) return;
+    const cartItems = document.getElementById('cart-dropdown-items');
+    const cartTotal = document.getElementById('cart-dropdown-total');
+    
+    if (!cartItems || !cartTotal) return;
     
     if (cart.length === 0) {
-        container.innerHTML = '';
-        empty.style.display = 'block';
-        totalEl.textContent = '0 VNĐ';
-        if (checkoutBtn) checkoutBtn.disabled = true;
+        cartItems.innerHTML = '<div class="text-center py-3"><i class="fas fa-shopping-cart text-muted"></i><p class="text-muted mb-0">Cart is empty</p></div>';
+        cartTotal.textContent = '0 VNĐ';
         return;
     }
-    
-    empty.style.display = 'none';
-    if (checkoutBtn) checkoutBtn.disabled = false;
-    
-    let html = '';
-    let total = 0;
-    
-    cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        html += `
-            <div class="cart-item d-flex align-items-center justify-content-between mb-3 cart-fade-in" id="cart-item-${item.id}">
-                <div class="d-flex align-items-center">
-                    <img src="${item.image}" class="cart-item-image me-3 cursor-pointer" alt="${item.name}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;" onclick="showProductDetailPage(${item.id})" title="Xem chi tiết sản phẩm">
-                    <div>
-                        <div class="fw-bold text-white cursor-pointer" onclick="showProductDetailPage(${item.id})" title="Xem chi tiết sản phẩm">${item.name}</div>
-                        <div class="text-muted">
-                            ${item.sale > 0 ? 
-                                `<div class="d-flex flex-column">
-                                    <span class="text-orange fw-bold">${formatPrice(item.price)}</span>
-                                    <span class="text-decoration-line-through" style="font-size: 0.8em;">${formatPrice(item.originalPrice)}</span>
-                                    <span class="badge bg-danger" style="font-size: 0.6em;">-${item.sale}%</span>
-                                </div>` : 
-                                `${formatPrice(item.price)}`
-                            }
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div class="quantity-controls me-3">
-                        <button class="quantity-btn" onclick="updateCartItemQuantity(${item.id}, ${item.quantity - 1})" title="Giảm số lượng">-</button>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateCartItemQuantity(${item.id}, parseInt(this.value))">
-                        <button class="quantity-btn" onclick="updateCartItemQuantity(${item.id}, ${item.quantity + 1})" title="Tăng số lượng">+</button>
-                    </div>
-                    <div class="text-end me-3">
-                        <div class="fw-bold text-orange">${formatPrice(itemTotal)}</div>
-                    </div>
-                    <button class="btn btn-outline-info btn-sm me-2" onclick="showCartOrderDetailModal(${item.id})" title="Xem chi tiết đơn hàng"><i class="fas fa-receipt"></i></button>
-                    <button class="btn btn-outline-danger btn-sm" onclick="showCartRemoveConfirmModal(${item.id})" title="Xóa khỏi giỏ hàng"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    totalEl.textContent = formatPrice(total);
-}
-
-function showCartOrderDetailModal(gameId) {
-    const item = cart.find(i => i.id === gameId);
-    if (!item) return;
-    const modalContent = document.getElementById('cart-order-detail-content');
-    if (!modalContent) return;
-    modalContent.innerHTML = `
-        <div class='text-center mb-3'>
-            <img src='${item.image}' alt='${item.name}' style='width:80px;height:80px;object-fit:cover;border-radius:12px;'>
-            <h5 class='mt-2 mb-1 text-orange'>${item.name}</h5>
-        </div>
-        <div class='mb-2'>
-            <strong>Giá:</strong> 
-            ${item.sale > 0 ? 
-                `<div class="d-flex flex-column">
-                    <span class="text-orange fw-bold">${formatPrice(item.price)} VNĐ</span>
-                    <span class="text-decoration-line-through" style="font-size: 0.8em;">${formatPrice(item.originalPrice)} VNĐ</span>
-                    <span class="badge bg-danger" style="font-size: 0.6em;">-${item.sale}%</span>
-                </div>` : 
-                `${formatPrice(item.price)} VNĐ`
-            }
-        </div>
-        <div class='mb-2'><strong>Số lượng:</strong> ${item.quantity}</div>
-        <div class='mb-2'><strong>Tổng cộng:</strong> <span class='text-orange fw-bold'>${formatPrice(item.price * item.quantity)}</span></div>
-        <div class='mb-2'><strong>Mã sản phẩm:</strong> #${item.id}</div>
-        <div class='mb-2'><strong>Trạng thái:</strong> <span class='badge bg-warning text-dark'>Chưa thanh toán</span></div>
-        <div class='form-text mt-2'>(Đây là thông tin mẫu, có thể mở rộng thêm chi tiết đơn hàng thực tế)</div>
-    `;
-    var modal = new bootstrap.Modal(document.getElementById('cartOrderDetailModal'));
-    modal.show();
-}
-
-function showCartRemoveConfirmModal(gameId) {
-    const item = cart.find(i => i.id === gameId);
-    if (!item) return;
-    cartRemovePendingId = gameId;
-    const modalContent = document.getElementById('cart-remove-confirm-content');
-    if (modalContent) {
-        modalContent.innerHTML = `
-            <div class='text-center mb-3'>
-                <img src='${item.image}' alt='${item.name}' style='width:60px;height:60px;object-fit:cover;border-radius:8px;'>
-                <div class='fw-bold mt-2 mb-1 text-orange'>${item.name}</div>
-                <div>Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?</div>
-            </div>
-        `;
-    }
-    var modal = new bootstrap.Modal(document.getElementById('cartRemoveConfirmModal'));
-    modal.show();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var removeBtn = document.getElementById('cart-remove-confirm-btn');
-    if (removeBtn) {
-        removeBtn.onclick = function() {
-            if (cartRemovePendingId !== null) {
-                removeFromCart(cartRemovePendingId);
-                cartRemovePendingId = null;
-                var modal = bootstrap.Modal.getInstance(document.getElementById('cartRemoveConfirmModal'));
-                if (modal) modal.hide();
-            }
-        };
-    }
-});
-
-function updateCartPage() {
-    const itemsEl = document.getElementById('cart-page-items');
-    const emptyEl = document.getElementById('cart-page-empty');
-    const summaryEl = document.getElementById('cart-summary');
-    const subtotalEl = document.getElementById('cart-subtotal');
-    const totalEl = document.getElementById('cart-page-total');
-    const checkoutBtn = document.getElementById('cart-checkout-btn');
-    
-    if (!itemsEl || !emptyEl || !summaryEl || !subtotalEl || !totalEl) return;
-    
-    if (cart.length === 0) {
-        itemsEl.innerHTML = '';
-        emptyEl.style.display = 'block';
-        summaryEl.style.display = 'none';
-        if (checkoutBtn) checkoutBtn.disabled = true;
-        return;
-    }
-    
-    emptyEl.style.display = 'none';
-    summaryEl.style.display = 'block';
-    if (checkoutBtn) checkoutBtn.disabled = false;
     
     let html = '';
     let total = 0;
@@ -283,87 +152,355 @@ function updateCartPage() {
         total += itemTotal;
         
         html += `
-            <div class="cart-item d-flex align-items-center justify-content-between mb-3">
-                <div class="d-flex align-items-center">
-                    <img src="${item.image}" class="cart-item-image me-3" alt="${item.name}">
-                    <div>
-                        <div class="fw-bold text-white">${item.name}</div>
-                        <div class="text-muted">
-                            ${item.sale > 0 ? 
-                                `<div class="d-flex flex-column">
-                                    <span class="text-orange fw-bold">${formatPrice(item.price)}</span>
-                                    <span class="text-decoration-line-through" style="font-size: 0.8em;">${formatPrice(item.originalPrice)}</span>
-                                    <span class="badge bg-danger" style="font-size: 0.6em;">-${item.sale}%</span>
-                                </div>` : 
-                                `${formatPrice(item.price)}`
-                            }
+            <div class="cart-dropdown-item d-flex align-items-center p-2" id="cart-dropdown-item-${item.id}">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-image me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="flex-grow-1">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price">${formatPrice(item.price)} x ${item.quantity}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart('${item.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    cartItems.innerHTML = html;
+    cartTotal.textContent = formatPrice(total);
+}
+
+function updateCartPage() {
+    const cartItemsEl = document.getElementById('cart-items');
+    const cartTotalEl = document.getElementById('cart-total');
+    
+    if (!cartItemsEl || !cartTotalEl) return;
+    
+    if (cart.length === 0) {
+        cartItemsEl.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart text-muted fa-3x mb-3"></i>
+                <h5 class="text-muted">Your cart is empty</h5>
+                <p class="text-muted">Add some games to get started!</p>
+                <button class="btn btn-orange" onclick="showAllGames()">
+                    <i class="fas fa-gamepad me-2"></i>Browse Games
+                </button>
+            </div>
+        `;
+        cartTotalEl.textContent = formatPrice(0);
+        return;
+    }
+    
+    let html = '';
+    let total = 0;
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        html += `
+            <div class="cart-item card mb-3 bg-dark border-secondary" id="cart-item-${item.id}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <img src="${item.image}" alt="${item.name}" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="card-title mb-1">${item.name}</h6>
+                            <p class="text-muted mb-0">Category: ${item.category || 'N/A'}</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <div class="quantity-controls">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateCartItemQuantity('${item.id}', ${item.quantity - 1})">-</button>
+                                <span class="mx-2">${item.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateCartItemQuantity('${item.id}', ${item.quantity + 1})">+</button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <div class="price-info">
+                                ${item.sale > 0 ? `<div class="text-muted text-decoration-line-through">${formatPrice(item.originalPrice)}</div>` : ''}
+                                <div class="fw-bold">${formatPrice(item.price)}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <div class="fw-bold">${formatPrice(itemTotal)}</div>
+                            <button class="btn btn-sm btn-outline-danger mt-1" onclick="removeFromCart('${item.id}')">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
                         </div>
                     </div>
-                </div>
-                <div class="d-flex align-items-center">
-                    <div class="quantity-controls me-3">
-                        <button class="quantity-btn" onclick="updateCartItemQuantity(${item.id}, ${item.quantity - 1})">-</button>
-                        <input type="number" class="quantity-input" value="${item.quantity}" min="1" 
-                               onchange="updateCartItemQuantity(${item.id}, parseInt(this.value))">
-                        <button class="quantity-btn" onclick="updateCartItemQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                    </div>
-                    <div class="text-end me-3">
-                        <div class="fw-bold text-orange">${formatPrice(itemTotal)}</div>
-                    </div>
-                    <button class="btn btn-outline-danger btn-sm" onclick="removeFromCart(${item.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
                 </div>
             </div>
         `;
     });
     
-    itemsEl.innerHTML = html;
-    subtotalEl.textContent = formatPrice(total);
-    totalEl.textContent = formatPrice(total);
+    cartItemsEl.innerHTML = html;
+    cartTotalEl.textContent = formatPrice(total);
 }
 
 function clearCart() {
-    if (confirm('Bạn có chắc muốn xóa toàn bộ giỏ hàng?')) {
-        cart = [];
-        updateCartDisplay();
-        saveCartToStorage();
-        updateCartModal();
-        updateCartPage();
-        // Cart cleared
+    cart = [];
+    saveCartToStorage();
+    updateCartDisplay();
+    updateCartModal();
+    updateCartPage();
+    showToast('Cart cleared successfully', 'success');
+}
+
+/**
+ * Handle checkout process
+ */
+async function handleCheckout() {
+    if (!isLoggedIn()) {
+        showToast('Please login to checkout', 'error');
+        openModal('loginModal');
+        return;
+    }
+    
+    if (cart.length === 0) {
+        showToast('Your cart is empty', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const orderData = {
+            items: cart.map(item => ({
+                productId: item.id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity
+            })),
+            totalAmount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            paymentMethod: 'online' // Default payment method
+        };
+        
+        const response = await fetch(`${API_BASE_URL}/api/orders`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(orderData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showToast('Order placed successfully!', 'success');
+            
+            // Clear cart after successful order
+            clearCart();
+            
+            // Close cart modal
+            const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+            if (cartModal) cartModal.hide();
+            
+            // Show order confirmation
+            showOrderConfirmation(result.order);
+        } else {
+            const error = await response.json();
+            showToast(error.message || 'Failed to place order', 'error');
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        showToast('Error processing checkout', 'error');
     }
 }
 
-function handleCheckout() {
-    if (cart.length === 0) {
-        // Cart is empty
-        return;
-    }
+/**
+ * Show order confirmation
+ */
+function showOrderConfirmation(order) {
+    const modal = new bootstrap.Modal(document.getElementById('orderConfirmationModal'));
+    modal.show();
     
-    // Check if user is logged in
-    const user = getCurrentUser();
-    if (!user) {
-        // Please login to checkout
-        // Optionally redirect to login
-        setTimeout(() => {
-            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-            loginModal.show();
-        }, 1500);
-        return;
-    }
+    // Populate order details
+    document.getElementById('order-id').textContent = order._id.slice(-8);
+    document.getElementById('order-total').textContent = formatPrice(order.totalAmount);
+    document.getElementById('order-status').textContent = order.status;
+    document.getElementById('order-date').textContent = new Date(order.createdAt).toLocaleDateString();
     
-            // Redirecting to checkout
-    openCheckoutModal();
-} 
-
-// Đảm bảo cập nhật giỏ hàng khi mở modal
-if (typeof bootstrap !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', function() {
-        var cartModalEl = document.getElementById('cartModal');
-        if (cartModalEl) {
-            cartModalEl.addEventListener('show.bs.modal', function () {
-                updateCartModal();
-            });
-        }
+    // Populate order items
+    const orderItemsEl = document.getElementById('order-items');
+    let itemsHtml = '';
+    
+    order.items.forEach(item => {
+        itemsHtml += `
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <div>
+                    <strong>${item.name}</strong>
+                    <br><small class="text-muted">Quantity: ${item.quantity}</small>
+                </div>
+                <div class="text-end">
+                    <strong>${formatPrice(item.price * item.quantity)}</strong>
+                </div>
+            </div>
+        `;
     });
-} 
+    
+    orderItemsEl.innerHTML = itemsHtml;
+}
+
+/**
+ * Load user's order history
+ */
+async function loadOrderHistory() {
+    if (!isLoggedIn()) {
+        showToast('Please login to view order history', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/orders`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const orders = await response.json();
+            displayOrderHistory(orders);
+        } else {
+            showToast('Failed to load order history', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading order history:', error);
+        showToast('Error loading order history', 'error');
+    }
+}
+
+/**
+ * Display order history
+ */
+function displayOrderHistory(orders) {
+    const orderHistoryEl = document.getElementById('order-history');
+    
+    if (!orderHistoryEl) return;
+    
+    if (orders.length === 0) {
+        orderHistoryEl.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-box text-muted fa-3x mb-3"></i>
+                <h5 class="text-muted">No orders yet</h5>
+                <p class="text-muted">Start shopping to see your order history!</p>
+                <button class="btn btn-orange" onclick="showAllGames()">
+                    <i class="fas fa-gamepad me-2"></i>Browse Games
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    
+    orders.forEach(order => {
+        const statusClass = {
+            'pending': 'warning',
+            'processing': 'info',
+            'shipped': 'primary',
+            'delivered': 'success',
+            'cancelled': 'danger'
+        }[order.status] || 'secondary';
+        
+        html += `
+            <div class="card mb-3 bg-dark border-secondary">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Order #${order._id.slice(-8)}</strong>
+                        <br><small class="text-muted">${new Date(order.createdAt).toLocaleDateString()}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-${statusClass}">${order.status}</span>
+                        <br><strong>${formatPrice(order.totalAmount)}</strong>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        ${order.items.map(item => `
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <img src="${item.image || 'https://via.placeholder.com/40x40'}" 
+                                         alt="${item.name}" 
+                                         class="me-2" 
+                                         style="width: 40px; height: 40px; object-fit: cover;">
+                                    <div>
+                                        <div><strong>${item.name}</strong></div>
+                                        <small class="text-muted">Qty: ${item.quantity} | ${formatPrice(item.price)}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    orderHistoryEl.innerHTML = html;
+}
+
+// Call this after DOMContentLoaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderCartDropdown);
+} else {
+    renderCartDropdown();
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializePage();
+    
+    // Force update admin menu after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        if (typeof updateAdminMenu === 'function') {
+            updateAdminMenu();
+        }
+    }, 1000);
+}); 
+
+// Hiển thị dropdown tài khoản khi đăng nhập
+function updateAccountDropdown() {
+    const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+    const accountGroup = document.getElementById('account-dropdown-group');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    if (user) {
+        if (accountGroup) accountGroup.style.display = '';
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (registerBtn) registerBtn.style.display = 'none';
+    } else {
+        if (accountGroup) accountGroup.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = '';
+        if (registerBtn) registerBtn.style.display = '';
+    }
+}
+
+// Gọi sau khi đăng nhập/đăng xuất
+if (typeof updateAccountDropdown === 'function') {
+    document.addEventListener('DOMContentLoaded', updateAccountDropdown);
+}
+
+// Call when cart dropdown is opened
+const cartDropdownBtn = document.getElementById('cartDropdown');
+if (cartDropdownBtn) {
+    cartDropdownBtn.addEventListener('click', renderCartDropdown);
+}
+
+// Ensure cart dropdown is updated when items are added/removed
+const oldAddToCart = typeof addToCart === 'function' ? addToCart : null;
+window.addToCart = function() {
+    if (oldAddToCart) oldAddToCart.apply(this, arguments);
+    renderCartDropdown();
+};
+
+const oldRemoveFromCart = typeof removeFromCart === 'function' ? removeFromCart : null;
+window.removeFromCart = function() {
+    if (oldRemoveFromCart) oldRemoveFromCart.apply(this, arguments);
+    renderCartDropdown();
+};
+
+const oldUpdateCartItemQuantity = typeof updateCartItemQuantity === 'function' ? updateCartItemQuantity : null;
+window.updateCartItemQuantity = function() {
+    if (oldUpdateCartItemQuantity) oldUpdateCartItemQuantity.apply(this, arguments);
+    renderCartDropdown();
+}; 
