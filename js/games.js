@@ -1069,11 +1069,4 @@ function setActiveMenu(menu) {
     }
 }
 
-/**
- * Hiển thị trang contact
- */
-function showContactPage() {
-    hideAllPages();
-    document.getElementById('contact').style.display = 'block';
-    updateBreadcrumb('Contact');
-}
+
