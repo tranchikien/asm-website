@@ -2,21 +2,28 @@
 let cart = [];
 let cartRemovePendingId = null;
 
+// Initialize cart when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 DOM Content Loaded - Initializing cart.js');
+    loadCartFromStorage();
+    console.log('✅ Cart.js initialization completed');
+});
+
 function addToCart(gameData) {
-    console.log('Adding to cart:', gameData); // Debug log
+    console.log('🔍 addToCart() called with:', gameData); // Debug log
     
     if (!gameData) {
-        // Invalid game information
+        console.log('❌ Invalid game data');
         return;
     }
     
     if (!gameData.name || gameData.name.trim() === '') {
-        // Invalid game name
+        console.log('❌ Invalid game name');
         return;
     }
     
     if (gameData.price === undefined || gameData.price === null || gameData.price < 0) {
-        // Invalid game price
+        console.log('❌ Invalid game price');
         return;
     }
     
@@ -24,10 +31,11 @@ function addToCart(gameData) {
     if (gameData.price === 0) {
         gameData.price = 0; // Đảm bảo giá là 0
     }
+    
     const existingItemIndex = cart.findIndex(item => item.id === gameData.id);
     if (existingItemIndex > -1) {
         cart[existingItemIndex].quantity += 1;
-        // Quantity updated
+        console.log('✅ Quantity updated for existing item');
     } else {
         // Tìm thông tin game từ gamesData để lấy thông tin sale
         const game = typeof gamesData !== 'undefined' ? gamesData.find(g => g.id === gameData.id) : null;
@@ -43,8 +51,10 @@ function addToCart(gameData) {
             quantity: 1,
             image: gameData.image || 'https://via.placeholder.com/60x60?text=Game'
         });
-        // Added to cart
+        console.log('✅ Added new item to cart');
     }
+    
+    console.log('✅ Cart updated:', cart);
     updateCartDisplay();
     saveCartToStorage();
 }
@@ -92,21 +102,30 @@ function updateCartItemQuantity(gameId, newQuantity) {
 }
 
 function saveCartToStorage() {
+    console.log('🔍 Saving cart to storage:', cart);
     localStorage.setItem('wongstore_cart', JSON.stringify(cart));
+    console.log('✅ Cart saved to storage');
 }
 
 function loadCartFromStorage() {
+    console.log('🔍 Loading cart from storage');
     const data = localStorage.getItem('wongstore_cart');
     cart = data ? JSON.parse(data) : [];
+    console.log('✅ Cart loaded:', cart);
     updateCartDisplay();
 }
 
 function updateCartDisplay() {
+    console.log('🔍 updateCartDisplay() called');
     const badge = document.getElementById('cart-count');
-    if (!badge) return;
+    if (!badge) {
+        console.log('❌ Cart count badge not found');
+        return;
+    }
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     badge.textContent = total;
     badge.style.display = total > 0 ? 'inline-block' : 'none';
+    console.log('✅ Cart display updated, total items:', total);
 }
 
 function updateCartModal() {
