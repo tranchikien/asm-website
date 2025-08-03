@@ -171,156 +171,21 @@ function openImageModal(imageSrc) {
     });
 }
 
-/**
- * Show toast message
- */
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    let icon = '';
-    switch(type) {
-        case 'success': icon = '<span class="toast-icon"><i class="fas fa-check-circle"></i></span>'; break;
-        case 'error': icon = '<span class="toast-icon"><i class="fas fa-times-circle"></i></span>'; break;
-        case 'warning': icon = '<span class="toast-icon"><i class="fas fa-exclamation-triangle"></i></span>'; break;
-        default: icon = '<span class="toast-icon"><i class="fas fa-info-circle"></i></span>';
-    }
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `${icon}<span>${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = 0;
-        setTimeout(() => toast.remove(), 500);
-    }, 2500);
-}
+
 
 // ===== PAGE NAVIGATION FUNCTIONS =====
 
-/**
- * Show Profile Page (mở modal thay vì section)
- */
-function showProfilePage() {
-    console.log('👤 Showing profile page...');
-    hideAllPages();
-    
-    const profilePage = document.getElementById('profile-page');
-    if (profilePage) {
-        profilePage.style.display = 'block';
-        console.log('✅ Profile page displayed');
-        
-        // Load user data
-        const user = getCurrentUser();
-        if (user) {
-            console.log('📋 Loading user data:', user);
-            
-            // Fill profile form
-            const fullnameEl = document.getElementById('modal-profile-fullname');
-            const emailEl = document.getElementById('modal-profile-email');
-            const phoneEl = document.getElementById('modal-profile-phone');
-            const addressEl = document.getElementById('modal-profile-address');
-            const birthdayEl = document.getElementById('modal-profile-birthday');
-            
-            if (fullnameEl) fullnameEl.value = user.fullname || '';
-            if (emailEl) emailEl.value = user.email || '';
-            if (phoneEl) phoneEl.value = user.phone || '';
-            if (addressEl) addressEl.value = user.address || '';
-            if (birthdayEl) birthdayEl.value = user.birthday || '';
-            
-            console.log('✅ Profile form filled with user data');
-        } else {
-            console.log('❌ No user data found');
-        }
-    } else {
-        console.log('❌ Profile page element not found');
-    }
-}
 
-/**
- * Show Contact Page
- */
-function showContactPage() {
-    hideAllPages();
-    document.getElementById('contact-page').style.display = 'block';
-    updateBreadcrumbForPage('Contact');
-    scrollToTop();
-    showToast('Đã mở trang liên hệ', 'info');
-}
 
-/**
- * Show Cart Page
- */
-function showCartPage() {
-    console.log('🛒 Showing cart page...');
-    hideAllPages();
-    
-    const cartPage = document.getElementById('cart-page');
-    if (cartPage) {
-        cartPage.style.display = 'block';
-        console.log('✅ Cart page displayed');
-        
-        // Load and render cart
-        if (typeof updateCartDisplay === 'function') {
-            updateCartDisplay();
-        }
-    } else {
-        console.log('❌ Cart page element not found');
-    }
-}
 
-/**
- * Show Product Detail Page
- */
-function showProductDetailPage(gameId) {
-    hideAllPages();
-    document.getElementById('product-detail-page').style.display = 'block';
-    loadProductDetail(gameId);
-    const game = gamesData.find(g => g.id === gameId);
-    if (game) {
-        updateBreadcrumbForPage(game.name, [
-            { text: 'Games', onclick: 'showAllGames()' }
-        ]);
-    }
-    scrollToTop();
-}
 
-/**
- * Show Home Page
- */
-function showHomePage() {
-    hideAllPages();
-    document.getElementById('home').style.display = 'block';
-    document.getElementById('featured-games').style.display = 'block';
-    document.getElementById('all-games').style.display = 'block';
-    updateBreadcrumbForPage('Home');
-    scrollToTop();
-    showToast('Đã về trang chủ', 'info');
-}
 
-/**
- * Hide all pages
- */
-function hideAllPages() {
-    console.log('🚫 Hiding all pages...');
-    
-    const pages = [
-        'profile-page',
-        'wishlist-page', 
-        'order-history-page',
-        'cart-page',
-        'home-page',
-        'games-page',
-        'contact-page'
-    ];
-    
-    pages.forEach(pageId => {
-        const page = document.getElementById(pageId);
-        if (page) {
-            page.style.display = 'none';
-        }
-    });
-    
-    console.log('✅ All pages hidden');
-}
+
+
+
+
+
+
 
 /**
  * Scroll to top
@@ -1015,24 +880,7 @@ function removeFromWishlist(gameId) {
     }
 }
 
-/**
- * Show wishlist page
- */
-function showWishlist() {
-    console.log('❤️ Showing wishlist page...');
-    hideAllPages();
-    
-    const wishlistPage = document.getElementById('wishlist-page');
-    if (wishlistPage) {
-        wishlistPage.style.display = 'block';
-        console.log('✅ Wishlist page displayed');
-        
-        // Load and render wishlist
-        renderWishlist();
-    } else {
-        console.log('❌ Wishlist page element not found');
-    }
-}
+
 
 /**
  * Render wishlist
@@ -1095,24 +943,7 @@ function updateWishlistCount() {
 
 // ===== ORDER HISTORY FUNCTIONS =====
 
-/**
- * Show order history page
- */
-function showOrderHistory() {
-    console.log('📦 Showing order history page...');
-    hideAllPages();
-    
-    const orderPage = document.getElementById('order-history-page');
-    if (orderPage) {
-        orderPage.style.display = 'block';
-        console.log('✅ Order history page displayed');
-        
-        // Load and render order history
-        renderOrderHistory();
-    } else {
-        console.log('❌ Order history page element not found');
-    }
-}
+
 
 /**
  * Render order history
