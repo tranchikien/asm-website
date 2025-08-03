@@ -195,7 +195,7 @@ function showProfilePage() {
     // Lấy user từ localStorage['user']
     const user = getCurrentUser();
     
-    console.log('Current user:', user); // Debug log
+    console.log('🔍 Show Profile Page - Current user:', user);
     
     // Update profile display elements
     const displayNameEl = document.getElementById('profile-display-name');
@@ -207,7 +207,7 @@ function showProfilePage() {
     const birthdayEl = document.getElementById('modal-profile-birthday');
     const locationEl = document.getElementById('modal-profile-location');
     
-    console.log('Found elements:', {
+    console.log('🔍 Found elements:', {
         displayNameEl: !!displayNameEl,
         displayEmailEl: !!displayEmailEl,
         fullnameEl: !!fullnameEl,
@@ -219,42 +219,34 @@ function showProfilePage() {
     });
     
     if (user) {
-        console.log('Filling user data:', user);
+        console.log('✅ Filling user data:', user);
         
         // Update display info
         if (displayNameEl) {
             displayNameEl.textContent = user.fullname || 'User Name';
-            console.log('Set display name to:', user.fullname);
         }
         if (displayEmailEl) {
             displayEmailEl.textContent = user.email || 'user@email.com';
-            console.log('Set display email to:', user.email);
         }
         
         // Update form fields
         if (fullnameEl) {
             fullnameEl.value = user.fullname || '';
-            console.log('Set fullname field to:', user.fullname);
         }
         if (emailEl) {
             emailEl.value = user.email || '';
-            console.log('Set email field to:', user.email);
         }
         if (phoneEl) {
             phoneEl.value = user.phone || '';
-            console.log('Set phone field to:', user.phone);
         }
         if (addressEl) {
             addressEl.value = user.address || '';
-            console.log('Set address field to:', user.address);
         }
         if (birthdayEl) {
             birthdayEl.value = user.birthday || '';
-            console.log('Set birthday field to:', user.birthday);
         }
         if (locationEl) {
             locationEl.value = user.location || '';
-            console.log('Set location field to:', user.location);
         }
         
         // Update last updated time
@@ -262,10 +254,9 @@ function showProfilePage() {
         if (lastUpdatedEl) {
             const lastUpdated = user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'Never';
             lastUpdatedEl.textContent = lastUpdated;
-            console.log('Set last updated to:', lastUpdated);
         }
     } else {
-        console.log('No user found, resetting fields');
+        console.log('❌ No user found, resetting fields');
         
         // Reset all fields
         if (displayNameEl) displayNameEl.textContent = 'User Name';
@@ -278,8 +269,15 @@ function showProfilePage() {
         if (locationEl) locationEl.value = '';
     }
     
-    openModal('profileModal');
-    showToast('Profile page opened', 'info');
+    // Mở modal profile
+    try {
+        const profileModal = new bootstrap.Modal(document.getElementById('profileModal'));
+        profileModal.show();
+        console.log('✅ Profile modal opened successfully');
+    } catch (error) {
+        console.error('❌ Error opening profile modal:', error);
+        showToast('Error opening profile page', 'error');
+    }
 }
 
 /**
