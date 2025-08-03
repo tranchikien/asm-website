@@ -1,38 +1,20 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = 'mongodb+srv://tranchikienk39:chikien181025@cluster0.0ebmvej.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 // User Schema
 const userSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
-        required: true
-    },
-    fullname: String,
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    fullname: { type: String, required: true },
     phone: String,
     address: String,
-    birthday: Date,
+    birthday: String,
     location: String,
-    isAdmin: {
-        type: Boolean,
-        default: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
+    isAdmin: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
@@ -46,39 +28,48 @@ async function createAdminUser() {
         // Check if admin already exists
         const existingAdmin = await User.findOne({ email: 'admin@kienstore.com' });
         if (existingAdmin) {
-            console.log('❌ Admin user already exists');
-            console.log('Email: admin@kienstore.com');
-            console.log('Password: admin123');
-            return;
+            console.log('⚠️ Admin user already exists, updating...');
+            await User.deleteOne({ email: 'admin@kienstore.com' });
+            console.log('🗑️ Old admin user deleted');
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash('admin123', saltRounds);
 
-        // Create admin user
+        // Create new admin user
         const adminUser = new User({
             email: 'admin@kienstore.com',
             password: hashedPassword,
             fullname: 'Admin User',
             phone: '0123456789',
             address: 'Admin Address',
-            location: 'Admin Location',
+            birthday: '1990-01-01',
+            location: 'Admin City',
             isAdmin: true
         });
 
         await adminUser.save();
         console.log('✅ Admin user created successfully!');
-        console.log('Email: admin@kienstore.com');
-        console.log('Password: admin123');
-        console.log('isAdmin: true');
+        console.log('📋 Admin credentials:');
+        console.log('   Email: admin@kienstore.com');
+        console.log('   Password: admin123');
+        console.log('   isAdmin: true');
+
+        // Verify the user was created correctly
+        const savedAdmin = await User.findOne({ email: 'admin@kienstore.com' });
+        console.log('🔍 Verification:');
+        console.log('   User found:', !!savedAdmin);
+        console.log('   isAdmin field:', savedAdmin.isAdmin);
+        console.log('   isAdmin type:', typeof savedAdmin.isAdmin);
+
+        mongoose.connection.close();
+        console.log('🔌 MongoDB connection closed');
 
     } catch (error) {
         console.error('❌ Error creating admin user:', error);
-    } finally {
-        await mongoose.disconnect();
-        console.log('🔌 Disconnected from MongoDB');
+        process.exit(1);
     }
 }
 
-// Run the script
 createAdminUser(); 
