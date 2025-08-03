@@ -200,109 +200,38 @@ function showToast(message, type = 'info') {
  * Show Profile Page (mở modal thay vì section)
  */
 function showProfilePage() {
-    console.log('🔍 showProfilePage() called');
+    console.log('👤 Showing profile page...');
+    hideAllPages();
     
-    try {
-        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
-        if (loginModal) loginModal.hide();
-        const registerModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
-        if (registerModal) registerModal.hide();
-    } catch (error) {
-        console.log('No modals to hide:', error);
-    }
-    
-    // Lấy user từ localStorage['user']
-    const user = getCurrentUser();
-    
-    console.log('🔍 Show Profile Page - Current user:', user);
-    
-    // Update profile display elements
-    const displayNameEl = document.getElementById('profile-display-name');
-    const displayEmailEl = document.getElementById('profile-display-email');
-    const fullnameEl = document.getElementById('modal-profile-fullname');
-    const emailEl = document.getElementById('modal-profile-email');
-    const phoneEl = document.getElementById('modal-profile-phone');
-    const addressEl = document.getElementById('modal-profile-address');
-    const birthdayEl = document.getElementById('modal-profile-birthday');
-    const locationEl = document.getElementById('modal-profile-location');
-    
-    console.log('🔍 Found elements:', {
-        displayNameEl: !!displayNameEl,
-        displayEmailEl: !!displayEmailEl,
-        fullnameEl: !!fullnameEl,
-        emailEl: !!emailEl,
-        phoneEl: !!phoneEl,
-        addressEl: !!addressEl,
-        birthdayEl: !!birthdayEl,
-        locationEl: !!locationEl
-    });
-    
-    if (user) {
-        console.log('✅ Filling user data:', user);
+    const profilePage = document.getElementById('profile-page');
+    if (profilePage) {
+        profilePage.style.display = 'block';
+        console.log('✅ Profile page displayed');
         
-        // Update display info
-        if (displayNameEl) {
-            displayNameEl.textContent = user.fullname || 'User Name';
-        }
-        if (displayEmailEl) {
-            displayEmailEl.textContent = user.email || 'user@email.com';
-        }
-        
-        // Update form fields
-        if (fullnameEl) {
-            fullnameEl.value = user.fullname || '';
-        }
-        if (emailEl) {
-            emailEl.value = user.email || '';
-        }
-        if (phoneEl) {
-            phoneEl.value = user.phone || '';
-        }
-        if (addressEl) {
-            addressEl.value = user.address || '';
-        }
-        if (birthdayEl) {
-            birthdayEl.value = user.birthday || '';
-        }
-        if (locationEl) {
-            locationEl.value = user.location || '';
-        }
-        
-        // Update last updated time
-        const lastUpdatedEl = document.getElementById('last-updated');
-        if (lastUpdatedEl) {
-            const lastUpdated = user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : 'Never';
-            lastUpdatedEl.textContent = lastUpdated;
+        // Load user data
+        const user = getCurrentUser();
+        if (user) {
+            console.log('📋 Loading user data:', user);
+            
+            // Fill profile form
+            const fullnameEl = document.getElementById('modal-profile-fullname');
+            const emailEl = document.getElementById('modal-profile-email');
+            const phoneEl = document.getElementById('modal-profile-phone');
+            const addressEl = document.getElementById('modal-profile-address');
+            const birthdayEl = document.getElementById('modal-profile-birthday');
+            
+            if (fullnameEl) fullnameEl.value = user.fullname || '';
+            if (emailEl) emailEl.value = user.email || '';
+            if (phoneEl) phoneEl.value = user.phone || '';
+            if (addressEl) addressEl.value = user.address || '';
+            if (birthdayEl) birthdayEl.value = user.birthday || '';
+            
+            console.log('✅ Profile form filled with user data');
+        } else {
+            console.log('❌ No user data found');
         }
     } else {
-        console.log('❌ No user found, resetting fields');
-        
-        // Reset all fields
-        if (displayNameEl) displayNameEl.textContent = 'User Name';
-        if (displayEmailEl) displayEmailEl.textContent = 'user@email.com';
-        if (fullnameEl) fullnameEl.value = '';
-        if (emailEl) emailEl.value = '';
-        if (phoneEl) phoneEl.value = '';
-        if (addressEl) addressEl.value = '';
-        if (birthdayEl) birthdayEl.value = '';
-        if (locationEl) locationEl.value = '';
-    }
-    
-    // Mở modal profile
-    try {
-        const profileModal = document.getElementById('profileModal');
-        if (profileModal) {
-            console.log('✅ Profile modal element found');
-            const bootstrapModal = new bootstrap.Modal(profileModal);
-            bootstrapModal.show();
-            console.log('✅ Profile modal opened successfully');
-        } else {
-            console.error('❌ Profile modal element not found');
-            showToast('Profile modal not found', 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error opening profile modal:', error);
-        showToast('Error opening profile page: ' + error.message, 'error');
+        console.log('❌ Profile page element not found');
     }
 }
 
@@ -321,32 +250,20 @@ function showContactPage() {
  * Show Cart Page
  */
 function showCartPage() {
-    console.log('🔍 showCartPage() called');
+    console.log('🛒 Showing cart page...');
+    hideAllPages();
     
-    try {
-        hideAllPages();
-        // Ẩn modal giỏ hàng nếu đang mở
-        try {
-            const cartModal = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
-            if (cartModal) cartModal.hide();
-        } catch (error) {
-            console.log('No cart modal to hide:', error);
-        }
+    const cartPage = document.getElementById('cart-page');
+    if (cartPage) {
+        cartPage.style.display = 'block';
+        console.log('✅ Cart page displayed');
         
-        const cartPage = document.getElementById('cart-page');
-        if (cartPage) {
-            cartPage.style.display = 'block';
-            console.log('✅ Cart page shown');
-            updateCartPage();
-            updateBreadcrumbForPage('Shopping Cart');
-            scrollToTop();
-        } else {
-            console.error('❌ Cart page element not found');
-            showToast('Cart page not found', 'error');
+        // Load and render cart
+        if (typeof updateCartDisplay === 'function') {
+            updateCartDisplay();
         }
-    } catch (error) {
-        console.error('❌ Error showing cart page:', error);
-        showToast('Error showing cart page: ' + error.message, 'error');
+    } else {
+        console.log('❌ Cart page element not found');
     }
 }
 
@@ -383,23 +300,26 @@ function showHomePage() {
  * Hide all pages
  */
 function hideAllPages() {
-    console.log('🔍 hideAllPages() called');
+    console.log('🚫 Hiding all pages...');
     
     const pages = [
-        'home', 'all-games', 'filtered-games-section', 'featured-games',
-        'profile-page', 'contact-page', 'cart-page', 'product-detail-page',
-        'wishlist-page', 'order-history-page'
+        'profile-page',
+        'wishlist-page', 
+        'order-history-page',
+        'cart-page',
+        'home-page',
+        'games-page',
+        'contact-page'
     ];
     
     pages.forEach(pageId => {
         const page = document.getElementById(pageId);
         if (page) {
             page.style.display = 'none';
-            console.log(`✅ Hidden page: ${pageId}`);
-        } else {
-            console.log(`⚠️ Page not found: ${pageId}`);
         }
     });
+    
+    console.log('✅ All pages hidden');
 }
 
 /**
@@ -1099,24 +1019,18 @@ function removeFromWishlist(gameId) {
  * Show wishlist page
  */
 function showWishlist() {
-    console.log('🔍 showWishlist() called');
+    console.log('❤️ Showing wishlist page...');
+    hideAllPages();
     
-    try {
-        hideAllPages();
-        const wishlistPage = document.getElementById('wishlist-page');
-        if (wishlistPage) {
-            wishlistPage.style.display = 'block';
-            console.log('✅ Wishlist page shown');
-            renderWishlist();
-            updateBreadcrumbForPage('Wishlist');
-            scrollToTop();
-        } else {
-            console.error('❌ Wishlist page element not found');
-            showToast('Wishlist page not found', 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error showing wishlist:', error);
-        showToast('Error showing wishlist: ' + error.message, 'error');
+    const wishlistPage = document.getElementById('wishlist-page');
+    if (wishlistPage) {
+        wishlistPage.style.display = 'block';
+        console.log('✅ Wishlist page displayed');
+        
+        // Load and render wishlist
+        renderWishlist();
+    } else {
+        console.log('❌ Wishlist page element not found');
     }
 }
 
@@ -1185,24 +1099,18 @@ function updateWishlistCount() {
  * Show order history page
  */
 function showOrderHistory() {
-    console.log('🔍 showOrderHistory() called');
+    console.log('📦 Showing order history page...');
+    hideAllPages();
     
-    try {
-        hideAllPages();
-        const orderHistoryPage = document.getElementById('order-history-page');
-        if (orderHistoryPage) {
-            orderHistoryPage.style.display = 'block';
-            console.log('✅ Order history page shown');
-            renderOrderHistory();
-            updateBreadcrumbForPage('Order History');
-            scrollToTop();
-        } else {
-            console.error('❌ Order history page element not found');
-            showToast('Order history page not found', 'error');
-        }
-    } catch (error) {
-        console.error('❌ Error showing order history:', error);
-        showToast('Error showing order history: ' + error.message, 'error');
+    const orderPage = document.getElementById('order-history-page');
+    if (orderPage) {
+        orderPage.style.display = 'block';
+        console.log('✅ Order history page displayed');
+        
+        // Load and render order history
+        renderOrderHistory();
+    } else {
+        console.log('❌ Order history page element not found');
     }
 }
 
