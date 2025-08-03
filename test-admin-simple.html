@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #1a1a1a; color: white; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #333; border-radius: 5px; }
+        .debug-info { background: #2a2a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .btn { margin: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-crown text-warning"></i> Admin Panel Test</h1>
+        
+        <!-- Login Section -->
+        <div class="test-section">
+            <h3>🔐 Login Test</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="email" id="testEmail" class="form-control mb-2" placeholder="Email" value="admin@asm.com">
+                    <input type="password" id="testPassword" class="form-control mb-2" placeholder="Password" value="admin123">
+                    <button class="btn btn-primary" onclick="testLogin()">Test Login</button>
+                    <button class="btn btn-secondary" onclick="testLogout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Info -->
+        <div class="test-section">
+            <h3>🔍 Debug Information</h3>
+            <button class="btn btn-info" onclick="showDebugInfo()">Show Debug Info</button>
+            <div id="debugInfo" class="debug-info" style="display:none;"></div>
+        </div>
+
+        <!-- Admin Menu Test -->
+        <div class="test-section">
+            <h3>👑 Admin Menu Test</h3>
+            <div id="admin-menu" style="display:none; background: #333; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <i class="fas fa-crown text-warning"></i> Admin Panel (Should be visible for admin)
+            </div>
+            <button class="btn btn-warning" onclick="testAdminMenu()">Test Admin Menu Visibility</button>
+        </div>
+
+        <!-- Functions Test -->
+        <div class="test-section">
+            <h3>⚙️ Functions Test</h3>
+            <button class="btn btn-success" onclick="testIsAdmin()">Test isAdmin()</button>
+            <button class="btn btn-success" onclick="testGetCurrentUser()">Test getCurrentUser()</button>
+            <button class="btn btn-success" onclick="testUpdateAdminMenu()">Test updateAdminMenu()</button>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        // Test Login Function
+        async function testLogin() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            console.log('🔐 Testing login with:', { email, password });
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                console.log('📡 Login response:', data);
+
+                if (response.ok) {
+                    // Save user data
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('authToken', data.token);
+                    
+                    console.log('💾 Saved to localStorage:', {
+                        user: JSON.parse(localStorage.getItem('user')),
+                        token: localStorage.getItem('authToken') ? 'Present' : 'Missing'
+                    });
+                    
+                    alert('✅ Login successful! Check console for details.');
+                    testUpdateAdminMenu();
+                } else {
+                    alert('❌ Login failed: ' + data.message);
+                }
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                alert('❌ Login error: ' + error.message);
+            }
+        }
+
+        // Test Logout Function
+        function testLogout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+            console.log('🚪 Logged out, cleared localStorage');
+            alert('🚪 Logged out!');
+            testUpdateAdminMenu();
+        }
+
+        // Test isAdmin Function
+        function testIsAdmin() {
+            const user = getCurrentUser();
+            const token = localStorage.getItem('authToken');
+            
+            const isAdminUser = user && user.isAdmin === true;
+            
+            console.log('🔍 isAdmin() test:', {
+                user: user,
+                hasToken: !!token,
+                isAdmin: isAdminUser,
+                userIsAdminField: user?.isAdmin,
+                userIsAdminType: typeof user?.isAdmin
+            });
+            
+            alert(`isAdmin() result: ${isAdminUser}\nCheck console for details.`);
+        }
+
+        // Test getCurrentUser Function
+        function testGetCurrentUser() {
+            const user = getCurrentUser();
+            console.log('👤 getCurrentUser() result:', user);
+            alert(`getCurrentUser() result: ${user ? 'User found' : 'No user'}\nCheck console for details.`);
+        }
+
+        // Test updateAdminMenu Function
+        function testUpdateAdminMenu() {
+            const adminMenu = document.getElementById('admin-menu');
+            const isAdminUser = isAdmin();
+            
+            console.log('🔧 updateAdminMenu() test:', {
+                adminMenu: adminMenu ? 'Found' : 'Not found',
+                isAdmin: isAdminUser,
+                display: isAdminUser ? 'block' : 'none'
+            });
+            
+            if (adminMenu) {
+                if (isAdminUser) {
+                    adminMenu.style.display = 'block';
+                    console.log('✅ Admin menu should be visible');
+                } else {
+                    adminMenu.style.display = 'none';
+                    console.log('❌ Admin menu should be hidden');
+                }
+            }
+            
+            alert(`updateAdminMenu() result: ${isAdminUser ? 'Admin menu visible' : 'Admin menu hidden'}\nCheck console for details.`);
+        }
+
+        // Test Admin Menu Visibility
+        function testAdminMenu() {
+            testUpdateAdminMenu();
+        }
+
+        // Show Debug Information
+        function showDebugInfo() {
+            const user = getCurrentUser();
+            const token = localStorage.getItem('authToken');
+            const isAdminUser = isAdmin();
+            
+            const debugInfo = `
+                <h5>Current State:</h5>
+                <p><strong>User:</strong> ${user ? JSON.stringify(user, null, 2) : 'None'}</p>
+                <p><strong>Token:</strong> ${token ? 'Present' : 'Missing'}</p>
+                <p><strong>isAdmin():</strong> ${isAdminUser}</p>
+                <p><strong>User isAdmin field:</strong> ${user?.isAdmin} (type: ${typeof user?.isAdmin})</p>
+                <p><strong>Admin menu visible:</strong> ${document.getElementById('admin-menu').style.display === 'block'}</p>
+            `;
+            
+            document.getElementById('debugInfo').innerHTML = debugInfo;
+            document.getElementById('debugInfo').style.display = 'block';
+        }
+
+        // Helper Functions (copied from auth.js)
+        function getCurrentUser() {
+            const user = localStorage.getItem('user');
+            if (!user) return null;
+
+            try {
+                return JSON.parse(user);
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                return null;
+            }
+        }
+
+        function isAdmin() {
+            const user = getCurrentUser();
+            const token = localStorage.getItem('authToken');
+
+            if (!user || !token) {
+                console.log('🔍 Admin Check: No user or token');
+                return false;
+            }
+
+            const isAdminUser = user.isAdmin === true;
+
+            console.log('🔍 Admin Check:', {
+                user: user.email,
+                isAdmin: isAdminUser,
+                hasToken: !!token,
+                userIsAdminField: user.isAdmin,
+                userIsAdminType: typeof user.isAdmin
+            });
+
+            return isAdminUser;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin Panel Test Page Loaded');
+            testUpdateAdminMenu();
+        });
+    </script>
+</body>
+</html> 
