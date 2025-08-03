@@ -4,13 +4,13 @@ let cartRemovePendingId = null;
 
 // Initialize cart when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 DOM Content Loaded - Initializing cart.js');
+    console.log('🛒 Cart.js: DOM Content Loaded - Initializing cart');
     loadCartFromStorage();
     console.log('✅ Cart.js initialization completed');
 });
 
 function addToCart(gameData) {
-    console.log('🔍 addToCart() called with:', gameData); // Debug log
+    console.log('🛒 addToCart() called with:', gameData);
     
     if (!gameData) {
         console.log('❌ Invalid game data');
@@ -29,7 +29,7 @@ function addToCart(gameData) {
     
     // Cho phép giá 0 (game miễn phí)
     if (gameData.price === 0) {
-        gameData.price = 0; // Đảm bảo giá là 0
+        gameData.price = 0;
     }
     
     const existingItemIndex = cart.findIndex(item => item.id === gameData.id);
@@ -45,9 +45,9 @@ function addToCart(gameData) {
         cart.push({
             id: gameData.id,
             name: gameData.name,
-            price: salePrice, // Giá sau khi giảm
-            originalPrice: originalPrice, // Giá gốc
-            sale: game ? game.sale : 0, // Phần trăm giảm giá
+            price: salePrice,
+            originalPrice: originalPrice,
+            sale: game ? game.sale : 0,
             quantity: 1,
             image: gameData.image || 'https://via.placeholder.com/60x60?text=Game'
         });
@@ -57,12 +57,18 @@ function addToCart(gameData) {
     console.log('✅ Cart updated:', cart);
     updateCartDisplay();
     saveCartToStorage();
+    
+    // Show success message
+    showToast(`Đã thêm "${gameData.name}" vào giỏ hàng!`, 'success');
 }
 
 function removeFromCart(gameId) {
+    console.log('🛒 removeFromCart() called with:', gameId);
+    
     const itemIndex = cart.findIndex(item => item.id === gameId);
     if (itemIndex > -1) {
         const gameName = cart[itemIndex].name;
+        
         // Hiệu ứng fade-out
         const itemEl = document.getElementById('cart-item-' + gameId);
         if (itemEl) {
@@ -73,23 +79,26 @@ function removeFromCart(gameId) {
                 updateCartDisplay();
                 saveCartToStorage();
                 updateCartModal();
-                // Removed from cart
+                showToast(`Đã xóa "${gameName}" khỏi giỏ hàng!`, 'info');
             }, 350);
         } else {
             cart.splice(itemIndex, 1);
             updateCartDisplay();
             saveCartToStorage();
             updateCartModal();
-            // Removed from cart
+            showToast(`Đã xóa "${gameName}" khỏi giỏ hàng!`, 'info');
         }
     }
 }
 
 function updateCartItemQuantity(gameId, newQuantity) {
+    console.log('🛒 updateCartItemQuantity() called with:', { gameId, newQuantity });
+    
     if (newQuantity <= 0) {
         removeFromCart(gameId);
         return;
     }
+    
     const itemIndex = cart.findIndex(item => item.id === gameId);
     if (itemIndex > -1) {
         cart[itemIndex].quantity = newQuantity;
@@ -97,25 +106,31 @@ function updateCartItemQuantity(gameId, newQuantity) {
         saveCartToStorage();
         updateCartPage();
         updateCartModal();
-        // Quantity updated
+        console.log('✅ Cart item quantity updated');
     }
 }
 
 function saveCartToStorage() {
-    localStorage.setItem('cart', JSON.stringify(cart));
+    console.log('💾 Saving cart to storage:', cart);
+    localStorage.setItem('wongstore_cart', JSON.stringify(cart));
 }
 
 function loadCartFromStorage() {
-    const savedCart = localStorage.getItem('cart');
+    console.log('📂 Loading cart from storage...');
+    const savedCart = localStorage.getItem('wongstore_cart');
     if (savedCart) {
         try {
             cart = JSON.parse(savedCart);
-            updateCartDisplay();
+            console.log('✅ Cart loaded from storage:', cart);
         } catch (error) {
-            console.error('Error loading cart from storage:', error);
+            console.error('❌ Error parsing cart data:', error);
             cart = [];
         }
+    } else {
+        console.log('📂 No saved cart found, starting with empty cart');
+        cart = [];
     }
+    updateCartDisplay();
 }
 
 function updateCartDisplay() {
