@@ -791,6 +791,116 @@ function showAddProductModal() {
 }
 
 /**
+ * Add new product
+ */
+async function addProduct(productData) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/products`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
+
+        if (response.ok) {
+            showToast('Product added successfully', 'success');
+            loadAdminProducts();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+            if (modal) modal.hide();
+        } else {
+            showToast('Failed to add product', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding product:', error);
+        showToast('Error adding product', 'error');
+    }
+}
+
+/**
+ * Edit product
+ */
+async function editProduct(productId) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const product = await response.json();
+            // Populate edit form
+            document.getElementById('productModalTitle').textContent = 'Edit Product';
+            document.getElementById('productId').value = productId;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productDescription').value = product.description;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productCategory').value = product.category;
+            document.getElementById('productPlatform').value = product.platform;
+            document.getElementById('productImageUrl').value = product.imageUrl;
+            document.getElementById('productIsSale').checked = product.isSale;
+            document.getElementById('productSalePercentage').value = product.salePercentage || 0;
+
+            const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
+            modal.show();
+        } else {
+            showToast('Failed to load product details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading product details:', error);
+        showToast('Error loading product details', 'error');
+    }
+}
+
+/**
+ * Update product
+ */
+async function updateProduct(productId, productData) {
+    if (!isAdmin()) {
+        showToast('Access denied. Admin privileges required.', 'error');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
+
+        if (response.ok) {
+            showToast('Product updated successfully', 'success');
+            loadAdminProducts();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addProductModal'));
+            if (modal) modal.hide();
+        } else {
+            showToast('Failed to update product', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating product:', error);
+        showToast('Error updating product', 'error');
+    }
+}
+
+/**
  * Delete admin product
  */
 async function deleteAdminProduct(productId) {
@@ -947,6 +1057,57 @@ document.getElementById('registerForm')?.addEventListener('submit', function (e)
     e.preventDefault();
     handleRegister();
 });
+
+// Product form event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Sale checkbox event listener
+    const saleCheckbox = document.getElementById('productIsSale');
+    const salePercentageGroup = document.getElementById('salePercentageGroup');
+    
+    if (saleCheckbox && salePercentageGroup) {
+        saleCheckbox.addEventListener('change', function() {
+            salePercentageGroup.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+});
+
+/**
+ * Handle product form submission
+ */
+function handleProductSubmit() {
+    const productId = document.getElementById('productId').value;
+    const productData = {
+        name: document.getElementById('productName').value,
+        description: document.getElementById('productDescription').value,
+        price: parseFloat(document.getElementById('productPrice').value),
+        category: document.getElementById('productCategory').value,
+        platform: document.getElementById('productPlatform').value,
+        imageUrl: document.getElementById('productImageUrl').value,
+        isSale: document.getElementById('productIsSale').checked,
+        salePercentage: document.getElementById('productIsSale').checked ? 
+            parseFloat(document.getElementById('productSalePercentage').value) : 0
+    };
+
+    // Validation
+    if (!productData.name || !productData.description || !productData.price || 
+        !productData.category || !productData.platform || !productData.imageUrl) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+
+    if (productData.isSale && (productData.salePercentage < 0 || productData.salePercentage > 100)) {
+        showToast('Sale percentage must be between 0 and 100', 'error');
+        return;
+    }
+
+    if (productId) {
+        // Update existing product
+        updateProduct(productId, productData);
+    } else {
+        // Add new product
+        addProduct(productData);
+    }
+}
 
 // ===== INITIALIZATION =====
 
