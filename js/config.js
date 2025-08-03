@@ -1,7 +1,18 @@
 // ===== API CONFIGURATION =====
 
-// API Base URL - Thay đổi URL này khi deploy
-const API_BASE_URL = window.location.origin;
+// API Base URL - Tự động detect environment
+const API_BASE_URL = (() => {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    
+    // Local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return `http://localhost:${port || '3000'}`;
+    }
+    
+    // Production - Railway backend
+    return 'https://asm-website-production.up.railway.app';
+})();
 
 // API Endpoints
 const API_ENDPOINTS = {
