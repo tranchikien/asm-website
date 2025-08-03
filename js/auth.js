@@ -136,12 +136,13 @@ function handleLogin() {
 
             // Update UI immediately
             updateUserDropdown();
+            updateAccountDropdown();
 
             // Force update admin menu with delay to ensure DOM is ready
             setTimeout(() => {
                 console.log('🔄 Forcing admin menu update after login...');
                 updateAdminMenu();
-                checkAdminStatus();
+                checkAndShowAdminMenu();
             }, 100);
 
             // Update profile page
@@ -429,6 +430,7 @@ function isAdmin() {
         return false;
     }
 
+    // Check if user.isAdmin is explicitly true
     const isAdminUser = user.isAdmin === true;
 
     console.log('🔍 Admin Check:', {
@@ -436,7 +438,8 @@ function isAdmin() {
         isAdmin: isAdminUser,
         hasToken: !!token,
         userIsAdminField: user.isAdmin,
-        userIsAdminType: typeof user.isAdmin
+        userIsAdminType: typeof user.isAdmin,
+        userObject: user
     });
 
     return isAdminUser;
